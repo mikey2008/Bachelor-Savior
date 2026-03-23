@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧑‍🍳 Bachelor Savior</title>
+    <!-- Modern typography from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Theme Toggle -->
+    <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+        <span class="icon sun">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        </span>
+        <span class="icon moon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </span>
+    </button>
+    
+    <div class="top-right-controls">
+        <!-- Add Custom Recipe -->
+        <button id="addCustomRecipeBtn" class="header-btn" aria-label="Add custom recipe" title="Add Recipe">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </button>
+        <!-- API Settings -->
+        <button id="apiSettingsBtn" class="header-btn" aria-label="API Settings" title="API Settings">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        </button>
+        <!-- View Saved Recipes -->
+        <button id="viewSavedBtn" class="header-btn" aria-label="View saved recipes" title="Library">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>
+        </button>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>🧑‍🍳 Bachelor Savior</h1>
+            <p class="subtitle">Enter the ingredients to discover a magical recipe!</p>
+        </header>
+
+        <main>
+            <!-- Cuisine Modal -->
+            <div id="cuisineModal" class="modal hidden">
+                <div class="modal-content">
+                    <h2>Select Cuisine Style</h2>
+                    <div class="cuisine-grid">
+                        <button class="cuisine-tag active" data-cuisine="Any">🌍 Any</button>
+                        <button class="cuisine-tag" data-cuisine="Italian">🍝 Italian</button>
+                        <button class="cuisine-tag" data-cuisine="Indian">🍛 Indian</button>
+                        <button class="cuisine-tag" data-cuisine="Mexican">🌮 Mexican</button>
+                        <button class="cuisine-tag" data-cuisine="Chinese">🥡 Chinese</button>
+                        <button class="cuisine-tag" data-cuisine="Japanese">🍣 Japanese</button>
+                        <button class="cuisine-tag" data-cuisine="Thai">🍜 Thai</button>
+                        <button class="cuisine-tag" data-cuisine="Mediterranean">🥗 Mediterranean</button>
+                        <button class="cuisine-tag" data-cuisine="French">🥐 French</button>
+                        <button class="cuisine-tag" data-cuisine="American">🍔 American</button>
+                    </div>
+                    <button id="closeModalBtn" class="close-modal">Done</button>
+                </div>
+            </div>
+
+            <!-- Saved Recipes Modal -->
+            <div id="savedModal" class="modal hidden">
+                <div class="modal-content">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <button id="cancelShareModeBtn" class="share-modal-btn" aria-label="Cancel Share" style="visibility: hidden;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                        <h2 style="margin-bottom: 0; text-align: center; flex-grow: 1;">Your Saved Magic</h2>
+                        <button id="shareAllRecipesBtn" class="share-modal-btn" aria-label="Share recipes">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                        </button>
+                    </div>
+                    <div id="savedRecipesList" class="saved-list">
+                        <!-- Recipe buttons will be injected here via JS -->
+                    </div>
+                    <button id="closeSavedModalBtn" class="close-modal">Close</button>
+                </div>
+            </div>
+
+            <!-- Add Custom Recipe Modal -->
+            <div id="addRecipeModal" class="modal hidden">
+                <div class="modal-content" style="max-width: 500px;">
+                    <h2>Add Your Recipe</h2>
+                    <input type="text" id="customRecipeTitle" placeholder="Recipe Title" style="margin-bottom: 1rem; width: 100%;">
+                    <textarea id="customRecipeContent" placeholder="Ingredients, Instructions..." style="min-height: 15rem; margin-bottom: 1.5rem; width: 100%; resize: vertical; font-family: inherit; line-height: 1.5;"></textarea>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="cancelAddRecipeBtn" class="close-modal">Cancel</button>
+                        <button id="saveCustomRecipeBtn" class="gradient-button" style="padding: 0.75rem; margin-top: 0;">Save Recipe</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Key Settings Modal -->
+            <div id="apiSettingsModal" class="modal hidden">
+                <div class="modal-content" style="max-width: 450px; text-align: center;">
+                    <h2>API Settings ⚙️</h2>
+                    <p style="font-size: 0.95rem; color: var(--text-light); margin-bottom: 1.5rem; line-height: 1.5;">Enter your Gemini API Key. Your key is securely saved entirely on your own device and never sent anywhere except Google.</p>
+                    <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." style="margin-bottom: 1.5rem; text-align: center; letter-spacing: 2px;">
+                    <div style="display: flex; gap: 10px;">
+                        <button id="closeApiSettingsBtn" class="close-modal">Cancel</button>
+                        <button id="saveApiKeyBtn" class="gradient-button" style="padding: 0.75rem; margin-top: 0;">Save Key</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group" id="ingredientsContainer">
+                <div class="input-wrapper has-badge">
+                    <input type="text" class="ingredient-input" placeholder="Ingredient (e.g., Chicken)" aria-label="Ingredient">
+                    <button id="cuisineBadge" class="cuisine-badge" aria-label="Select Cuisine">🌍 Any</button>
+                </div>
+            </div>
+            
+            <div class="add-more-container" style="display: flex; justify-content: space-between;">
+                <button id="clearIngredientsBtn" class="text-button" style="color: #ef4444;">Clear All</button>
+                <button id="addIngredientBtn" class="text-button">+ Add Ingredient</button>
+            </div>
+
+            <!-- Dietary Restrictions -->
+            <div class="input-group" id="restrictionsContainer">
+                <div class="input-wrapper">
+                    <input type="text" class="restriction-input" placeholder="Dietary Filter (Optional, e.g., Vegan)" aria-label="Dietary Filter">
+                    <div class="info-icon" aria-label="Dietary restrictions are special food rules or allergies (e.g., Vegan, Gluten-Free, Nut Allergy, Halal, Keto, etc.).">i</div>
+                </div>
+            </div>
+            
+            <div class="add-more-container">
+                <button id="addRestrictionBtn" class="text-button">+ Add Filter</button>
+            </div>
+
+            <button id="cookButton" class="gradient-button">Cook Magic 😋</button>
+
+            <!-- 3D Book Container -->
+            <div id="bookContainer" class="book-container hidden">
+                <div class="book closed" id="recipeBook">
+                    <!-- Left cover (flips open) -->
+                    <div class="book-cover front">
+                        <h2>📖</h2>
+                        <h3>Secret Recipes</h3>
+                        <div class="book-spine"></div>
+                    </div>
+                    <!-- Left page (static back of the cover) -->
+                    <div class="book-page left-page">
+                        <div class="left-page-content" id="leftPageContent">
+                            <p>from the culinary gods...</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Right page (where content appears) -->
+                    <div class="book-page right-page" id="rightPage">
+                        <div id="storyLoader" class="story-loader hidden">
+                            <div id="storyEmoji" class="story-emoji">🤔</div>
+                            <p id="storyText" class="story-text">Thinking of a recipe...</p>
+                        </div>
+                        <div id="recipeContent" class="page-content page-slider"></div>
+                        <div class="page-controls" style="position: absolute; bottom: 1rem; left: 0; width: 100%; display: flex; justify-content: space-between; padding: 0 1.5rem; pointer-events: none;">
+                            <div style="pointer-events: auto;">
+                                <button id="prevPageBtn" class="page-btn hidden">◄</button>
+                            </div>
+                            <div style="display: flex; gap: 0.75rem; justify-content: flex-end; align-items: center; pointer-events: auto;">
+                                <button id="shareRecipeBtn" class="page-btn hidden" aria-label="Share Recipe">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                                </button>
+                                <button id="saveRecipeBtn" class="page-btn hidden" aria-label="Save Recipe">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>
+                                </button>
+                                <button id="nextPageBtn" class="page-btn hidden">►</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Back cover (static behind the right page) -->
+                    <div class="book-cover back"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- For parsing markdown from Gemini response -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
