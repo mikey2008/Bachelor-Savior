@@ -10,12 +10,17 @@ Bachelor Savior is a smart and magical recipe web application that helps you coo
 - **Local Storage**: All your saved recipes and settings are stored locally on your device for fast access and privacy.
 
 ## Setup and Usage 🚀
-This project is a static website and requires no complex build tools or installation step.
-1. Clone or download this repository.
-2. Open `index.html` in your favorite web browser (or leverage a local development server for a complete testing experience).
-3. Click the **API Settings ⚙️** icon in the top right.
-4. Input your Gemini API key (this key is stored securely inside your browser's local storage and never transmitted anywhere else besides Google).
-5. Start adding your ingredients and click "Cook Magic 😋"!
+1.  **Clone or download** this repository.
+2.  **Backend Configuration**:
+    -   Go to the `backend` folder.
+    -   Copy `.env.example` to `.env`.
+    -   Set your `GEMINI_API_KEY` and other secrets.
+    -   Run `npm install` and `npm start`.
+3.  **Frontend Access**:
+    -   Open `index.html` via a local server (e.g., VS Code Live Server).
+    -   The app will automatically proxy AI requests through your backend.
+4.  **Start Cooking!** 😋
+
 
 ## Technologies Used 💻
 - **HTML5** & **Vanilla CSS3** (Custom properties, Flexbox, CSS Grid)

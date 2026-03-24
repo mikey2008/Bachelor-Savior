@@ -1,0 +1,5 @@
+Contact: security@example.com
+Encryption: https://example.com/pgp-key.txt
+Acknowledgments: Thank you to all security researchers who responsibly disclosed issues.
+Preferred-Languages: en
+Expires: 2027-03-24T00:00:00Z

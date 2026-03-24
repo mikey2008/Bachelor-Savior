@@ -1,7 +1,42 @@
-let GEMINI_API_KEY = localStorage.getItem('geminiApiKey') || "";
+
 function getApiUrl() {
-    return `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    // In production, this should be a relative path or environment variable.
+    // For local dev, we point to the Express backend.
+    return 'http://localhost:3001/api/ai/generate';
 }
+
+
+/**
+ * SECURITY: Sanitize error messages shown to the user.
+ * Never expose raw API error details (which may include key hints, quota info, etc.) to the UI.
+ */
+// Simple client-side security logger
+const SecurityLogger = {
+
+    logs: [],
+    log: function(eventType, details) {
+        const entry = { timestamp: new Date().toISOString(), eventType, details };
+        this.logs.push(entry);
+        console.warn('SecurityLog:', entry);
+        // Persist logs to localStorage for later analysis (optional)
+        try {
+            const existing = JSON.parse(localStorage.getItem('securityLogs') || '[]');
+            existing.push(entry);
+            localStorage.setItem('securityLogs', JSON.stringify(existing));
+        } catch (e) { /* ignore storage errors */ }
+    }
+};
+function sanitizeError(err) {
+    const msg = err?.message || '';
+
+    if (msg.includes('quota') || msg.includes('429')) return 'API quota exceeded. Please try again later.';
+    if (msg.includes('network') || msg.includes('fetch') || msg.includes('Failed to fetch')) return 'Network error — please check your internet connection.';
+    if (msg.includes('400')) return 'Bad request sent to API. Please try again.';
+    if (msg.includes('500') || msg.includes('503')) return 'The AI service is temporarily unavailable. Please try again shortly.';
+    // Generic fallback — never expose raw internal messages
+    return 'Something went wrong generating the recipe. Please try again.';
+}
+
 
 const themeToggle = document.getElementById('themeToggle');
 if (localStorage.getItem('theme') === 'light') {
@@ -219,7 +254,11 @@ document.getElementById('savedModal').addEventListener('click', (e) => {
 });
 
 function formatAndRenderRecipe(recipeText, container) {
-    container.innerHTML = marked.parse(recipeText);
+    // SECURITY: Sanitize parsed markdown HTML before inserting into DOM (XSS prevention)
+    const rawHtml = marked.parse(recipeText);
+    container.innerHTML = typeof DOMPurify !== 'undefined'
+        ? DOMPurify.sanitize(rawHtml, { USE_PROFILES: { html: true } })
+        : rawHtml; // fallback if DOMPurify somehow failed to load
     
     // Inject active task checkers
     const uls = container.querySelectorAll('ul');
@@ -447,12 +486,25 @@ document.getElementById('cancelAddRecipeBtn').addEventListener('click', () => {
     document.getElementById('addRecipeModal').classList.add('hidden');
 });
 
+/**
+ * SECURITY: Sanitize text input to prevent XSS and other injection attacks.
+ */
+function sanitizeInput(text) {
+    if (typeof text !== 'string') return '';
+    // Basic text-only cleaning for raw inputs before they hit the API or DB
+    return text.replace(/[<>]/g, '').trim();
+}
+
 document.getElementById('saveCustomRecipeBtn').addEventListener('click', () => {
-    const title = document.getElementById('customRecipeTitle').value.trim();
-    const content = document.getElementById('customRecipeContent').value.trim();
+    const title = sanitizeInput(document.getElementById('customRecipeTitle').value);
+    const content = sanitizeInput(document.getElementById('customRecipeContent').value);
     
-    if (!title || !content) {
-        alert("Please provide both a title and recipe content!");
+    if (!title || title.length < 3) {
+        alert("Please provide a title (at least 3 characters).");
+        return;
+    }
+    if (!content || content.length < 10) {
+        alert("Please provide recipe content (at least 10 characters).");
         return;
     }
     
@@ -472,8 +524,18 @@ document.getElementById('addRecipeModal').addEventListener('click', (e) => {
 });
 
 document.getElementById('cookButton').addEventListener('click', async () => {
+    // Rate limiting: allow one cook action per 5 seconds
+    const now = Date.now();
+    if (window.__lastCookClick && now - window.__lastCookClick < 5000) {
+        SecurityLogger.log('rate_limit', { message: 'Cook button clicked too frequently' });
+        alert('Please wait a moment before cooking again.');
+        return;
+    }
+    window.__lastCookClick = now;
     const inputElements = document.querySelectorAll('.ingredient-input');
-    const ingredientValues = Array.from(inputElements).map(input => input.value.trim()).filter(val => val !== '');
+    const ingredientValues = Array.from(inputElements)
+        .map(input => sanitizeInput(input.value))
+        .filter(val => val !== '');
 
     if (ingredientValues.length === 0) {
         alert("Please enter at least one ingredient to cook magic!");
@@ -481,7 +543,9 @@ document.getElementById('cookButton').addEventListener('click', async () => {
     }
 
     const filterElements = document.querySelectorAll('.restriction-input');
-    const filterValues = Array.from(filterElements).map(input => input.value.trim()).filter(val => val !== '');
+    const filterValues = Array.from(filterElements)
+        .map(input => sanitizeInput(input.value))
+        .filter(val => val !== '');
     const filters = filterValues.length > 0 ? filterValues.join(', ') : 'None';
 
     const ingredients = ingredientValues.join(', ');
@@ -526,26 +590,17 @@ document.getElementById('cookButton').addEventListener('click', async () => {
     const startTime = Date.now();
 
     try {
-        if (!GEMINI_API_KEY || GEMINI_API_KEY.trim() === "") {
-            document.getElementById('apiSettingsModal').classList.remove('hidden');
-            throw new Error("Please set your Gemini API Key in Settings first.");
-        }
-
+        const accessToken = localStorage.getItem('accessToken'); // Assuming we store it there
         const response = await fetch(getApiUrl(), {
+
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
             },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: prompt }]
-                }],
-                generationConfig: {
-                    temperature: 0.7,
-                    maxOutputTokens: 8192,
-                }
-            })
+            body: JSON.stringify({ prompt })
         });
+
 
         if (!response.ok) {
             const errorData = await response.json();
@@ -590,9 +645,11 @@ document.getElementById('cookButton').addEventListener('click', async () => {
 
     } catch (error) {
         stopStoryLoader();
+        // SECURITY: Use sanitizeError() — never dump raw error.message to the UI
+        const safeMsg = sanitizeError(error);
         recipeContent.innerHTML = `
             <h2>Oops! Kitchen Error</h2>
-            <p style="color: #ef4444;">${error.message}</p>
+            <p style="color: #ef4444;">${safeMsg}</p>
         `;
     } finally {
         button.disabled = false;
@@ -624,32 +681,7 @@ function stopStoryLoader() {
     if (storyInterval) clearInterval(storyInterval);
 }
 
-// API Settings Modal Logic
-document.getElementById('apiSettingsBtn').addEventListener('click', () => {
-    document.getElementById('geminiApiKeyInput').value = GEMINI_API_KEY;
-    document.getElementById('apiSettingsModal').classList.remove('hidden');
-});
 
-document.getElementById('closeApiSettingsBtn').addEventListener('click', () => {
-    document.getElementById('apiSettingsModal').classList.add('hidden');
-});
-
-document.getElementById('apiSettingsModal').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('apiSettingsModal')) {
-        document.getElementById('apiSettingsModal').classList.add('hidden');
-    }
-});
-
-document.getElementById('saveApiKeyBtn').addEventListener('click', () => {
-    const key = document.getElementById('geminiApiKeyInput').value.trim();
-    if (key) {
-        localStorage.setItem('geminiApiKey', key);
-        GEMINI_API_KEY = key;
-        document.getElementById('apiSettingsModal').classList.add('hidden');
-    } else {
-        alert("Please enter a valid API Key.");
-    }
-});
 
 // Clear All Ingredients Logic
 document.getElementById('clearIngredientsBtn').addEventListener('click', () => {
