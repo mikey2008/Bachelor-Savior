@@ -12,7 +12,7 @@
          • frame-ancestors 'none' — identical to X-Frame-Options DENY
          • upgrade-insecure-requests — force https:// sub-resources
     -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.gstatic.com; connect-src https://generativelanguage.googleapis.com; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.gstatic.com; connect-src 'self' http://localhost:3001 https://generativelanguage.googleapis.com; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;">
     <title>🧑‍🍳 Bachelor Savior</title>
     <!-- Modern typography from Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -33,6 +33,28 @@
     </button>
     
     <div class="top-right-controls">
+        <div class="profile-menu-container">
+            <button id="profileBtn" class="header-btn" aria-label="Profile" title="Profile">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </button>
+            <div id="profileDropdown" class="profile-dropdown" style="display: none;">
+                <div id="dropdownAuth" class="auth-menu">
+                    <button id="loginBtn" class="dropdown-item">Login</button>
+                    <button id="registerBtn" class="dropdown-item">Register</button>
+                </div>
+                <div id="dropdownUser" class="auth-menu" style="display: none;">
+                    <div class="user-info-dropdown">
+                        <span id="dropdownEmailSpan" class="dropdown-email"></span>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <button id="logoutBtn" class="dropdown-item danger">
+                        <span>Logout</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Add Custom Recipe -->
         <button id="addCustomRecipeBtn" class="header-btn" aria-label="Add custom recipe" title="Add Recipe">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -100,6 +122,36 @@
                         <button id="cancelAddRecipeBtn" class="close-modal">Cancel</button>
                         <button id="saveCustomRecipeBtn" class="gradient-button" style="padding: 0.75rem; margin-top: 0;">Save Recipe</button>
                     </div>
+                </div>
+            </div>
+
+            <!-- Login Modal -->
+            <div id="loginModal" class="modal hidden">
+                <div class="modal-content auth-modal">
+                    <h2>Welcome Back</h2>
+                    <p class="auth-subtitle">Login to access your saved recipes</p>
+                    <div class="auth-form">
+                        <input type="email" id="loginEmail" placeholder="Email" required>
+                        <input type="password" id="loginPassword" placeholder="Password" required>
+                        <button id="submitLoginBtn" class="gradient-button">Login</button>
+                        <p class="auth-switch">Don't have an account? <a href="#" id="switchToRegister">Register</a></p>
+                    </div>
+                    <button class="close-modal-x" aria-label="Close">&times;</button>
+                </div>
+            </div>
+
+            <!-- Register Modal -->
+            <div id="registerModal" class="modal hidden">
+                <div class="modal-content auth-modal">
+                    <h2>Create Account</h2>
+                    <p class="auth-subtitle">Secure your recipes in the cloud</p>
+                    <div class="auth-form">
+                        <input type="email" id="registerEmail" placeholder="Email" required>
+                        <input type="password" id="registerPassword" placeholder="Password (Min 8 chars, A-z, 0-9)" required>
+                        <button id="submitRegisterBtn" class="gradient-button">Create Account</button>
+                        <p class="auth-switch">Already have an account? <a href="#" id="switchToLogin">Login</a></p>
+                    </div>
+                    <button class="close-modal-x" aria-label="Close">&times;</button>
                 </div>
             </div>
 
@@ -183,9 +235,9 @@
     </div>
 
     <!-- DOMPurify: sanitize HTML before inserting into DOM (XSS prevention) -->
-    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js" integrity="sha384-oqWuMNBbBDqbIfT9LmLuDBp0H4GEfT6FKCzKFWa7hBRFTi7jqfvRSinMiWQPhbS" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <!-- For parsing markdown from Gemini response -->
-    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js" integrity="sha384-t41bWgR0UF3T4SXhJqUz55VkVcO2Cv5Z4rFHPluQpJJXdVXJH83M+BNi1IEOSzM" crossorigin="anonymous"></script>
-    <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+    <script src="script.js?v=4"></script>
 </body>
 </html>
