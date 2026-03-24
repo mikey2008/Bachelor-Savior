@@ -3,7 +3,6 @@ node_modules/
 
 # ── Secrets & Environment Variables ──────────────────────────────────────────
 # NEVER commit API keys, tokens, or credentials to source control.
-# The Gemini API key lives only in the user's browser localStorage — not here.
 .env
 .env.*
 *.env
@@ -26,3 +25,11 @@ credentials.*
 *.log
 logs/
 npm-debug.log*
+
+# SQLite database files (contains user data - never commit)
+backend/db/*.db
+backend/db/*.db-shm
+backend/db/*.db-wal
+
+# Test / scratch scripts
+backend/scripts/test_*.js
