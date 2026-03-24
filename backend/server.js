@@ -1,0 +1,42 @@
+'use strict';
+
+require('dotenv').config();
+const express = require('express');
+const helmet = require('helmet');
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
+
+const authenticate = require('./middleware/authenticate');
+const { apiLimiter } = require('./middleware/rateLimiters');
+const authRouter = require('./routes/auth');
+const recipesRouter = require('./routes/recipes');
+const aiRouter      = require('./routes/ai');
+
+
+const app = express();
+const PORT = process.env.PORT || 3001;
+
+// Middleware
+app.use(helmet());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://127.0.0.1:5500',
+  credentials: true,
+}));
+app.use(express.json());
+app.use(cookieParser());
+
+// Public routes
+app.use('/auth', authRouter);
+
+// Protected API routes – apply JWT auth and rate limiting
+app.use('/api', authenticate, apiLimiter);
+app.use('/api/recipes', recipesRouter);
+app.use('/api/ai', aiRouter);
+
+
+// Health check
+app.get('/', (req, res) => res.send('Bachelor Savior backend is running'));
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server listening on http://localhost:${PORT}`);
+});

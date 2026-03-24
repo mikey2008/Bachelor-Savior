@@ -1,0 +1,38 @@
+/*
+  # HTTP Security Headers — Bachelor Savior
+  # Compatible with Netlify (_headers file) and Vercel (see vercel.json alternative)
+  # These headers are sent with every response from the CDN edge.
+*/
+
+/*
+  Apply to all routes
+*/
+  # Enforce HTTPS for 1 year; include subdomains; allow preload list submission
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+
+  # Deny framing entirely — prevents clickjacking
+  X-Frame-Options: DENY
+
+  # Block MIME-type sniffing — forces browser to honour declared Content-Type
+  X-Content-Type-Options: nosniff
+
+  # Don't send Referer header when navigating away from this site
+  Referrer-Policy: no-referrer
+
+  # Restrict access to powerful browser APIs — camera, mic, geolocation etc.
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=()
+
+  # Bot mitigation — prevent indexing/following by scrapers/crawlers
+  X-Robots-Tag: noindex, nofollow
+
+
+  # Cross-Origin Opener Policy — isolates browsing context from cross-origin windows
+  Cross-Origin-Opener-Policy: same-origin
+
+  # Content Security Policy (HTTP header — takes precedence over <meta> tag)
+  # • default-src 'self'            — block everything not listed
+  # • script-src                    — only our own script.js + two pinned CDN hashes
+  # • style-src 'unsafe-inline'     — needed for inline styles used by the app
+  # • connect-src                   — only the Gemini API endpoint
+  # • upgrade-insecure-requests     — auto-upgrade http:// sub-resources to https://
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.gstatic.com; connect-src https://generativelanguage.googleapis.com; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;

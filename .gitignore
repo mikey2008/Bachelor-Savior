@@ -1,4 +1,28 @@
 node_modules/
 .DS_Store
+
+# ── Secrets & Environment Variables ──────────────────────────────────────────
+# NEVER commit API keys, tokens, or credentials to source control.
+# The Gemini API key lives only in the user's browser localStorage — not here.
 .env
+.env.*
+*.env
+env.js
+env.local
+
+# Secret / config files that might accidentally contain keys
+secrets.*
+secret.*
+config.local.*
+api-keys.*
+api_keys.*
+credentials.*
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Log files (may contain sensitive request/response data)
 *.log
+logs/
+npm-debug.log*

@@ -3,11 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Content Security Policy:
+         • script-src  — only self + pinned CDN (DOMPurify, marked)
+         • connect-src — only the Gemini API; blocks all other XHR/WS
+         • object-src 'none' — no Flash / plugin embeds
+         • base-uri 'self'   — prevent base-tag hijacking
+         • form-action 'self'— prevent cross-origin form submission
+         • frame-ancestors 'none' — identical to X-Frame-Options DENY
+         • upgrade-insecure-requests — force https:// sub-resources
+    -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.gstatic.com; connect-src https://generativelanguage.googleapis.com; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;">
     <title>🧑‍🍳 Bachelor Savior</title>
     <!-- Modern typography from Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <!-- reCAPTCHA v2 script (required for abuse protection) -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
+
 <body>
     <!-- Theme Toggle -->
     <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
@@ -24,15 +37,12 @@
         <button id="addCustomRecipeBtn" class="header-btn" aria-label="Add custom recipe" title="Add Recipe">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
         </button>
-        <!-- API Settings -->
-        <button id="apiSettingsBtn" class="header-btn" aria-label="API Settings" title="API Settings">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-        </button>
         <!-- View Saved Recipes -->
         <button id="viewSavedBtn" class="header-btn" aria-label="View saved recipes" title="Library">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>
         </button>
     </div>
+
 
     <div class="container">
         <header>
@@ -93,18 +103,7 @@
                 </div>
             </div>
 
-            <!-- API Key Settings Modal -->
-            <div id="apiSettingsModal" class="modal hidden">
-                <div class="modal-content" style="max-width: 450px; text-align: center;">
-                    <h2>API Settings ⚙️</h2>
-                    <p style="font-size: 0.95rem; color: var(--text-light); margin-bottom: 1.5rem; line-height: 1.5;">Enter your Gemini API Key. Your key is securely saved entirely on your own device and never sent anywhere except Google.</p>
-                    <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." style="margin-bottom: 1.5rem; text-align: center; letter-spacing: 2px;">
-                    <div style="display: flex; gap: 10px;">
-                        <button id="closeApiSettingsBtn" class="close-modal">Cancel</button>
-                        <button id="saveApiKeyBtn" class="gradient-button" style="padding: 0.75rem; margin-top: 0;">Save Key</button>
-                    </div>
-                </div>
-            </div>
+
 
             <div class="input-group" id="ingredientsContainer">
                 <div class="input-wrapper has-badge">
@@ -130,7 +129,12 @@
                 <button id="addRestrictionBtn" class="text-button">+ Add Filter</button>
             </div>
 
+
+            <!-- reCAPTCHA Placeholder (Bot protection for expensive AI calls) -->
+            <div id="recaptcha-container" class="g-recaptcha" data-sitekey="YOUR_RECAPTCHA_SITE_KEY" style="margin-bottom: 1rem; display: flex; justify-content: center;"></div>
+
             <button id="cookButton" class="gradient-button">Cook Magic 😋</button>
+
 
             <!-- 3D Book Container -->
             <div id="bookContainer" class="book-container hidden">
@@ -178,8 +182,10 @@
         </main>
     </div>
 
+    <!-- DOMPurify: sanitize HTML before inserting into DOM (XSS prevention) -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js" integrity="sha384-oqWuMNBbBDqbIfT9LmLuDBp0H4GEfT6FKCzKFWa7hBRFTi7jqfvRSinMiWQPhbS" crossorigin="anonymous"></script>
     <!-- For parsing markdown from Gemini response -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js" integrity="sha384-t41bWgR0UF3T4SXhJqUz55VkVcO2Cv5Z4rFHPluQpJJXdVXJH83M+BNi1IEOSzM" crossorigin="anonymous"></script>
     <script src="script.js"></script>
 </body>
 </html>
