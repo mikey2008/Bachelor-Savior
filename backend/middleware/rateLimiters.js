@@ -39,7 +39,9 @@ const apiLimiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => req.user?.id ?? req.ip,  // key by user ID after auth
+  // standardHeaders: true,
+  // legacyHeaders: false,
+  // keyGenerator: (req) => req.user?.id ?? req.ip,
   message: { error: 'Rate limit exceeded. Please slow down.' },
 });
 

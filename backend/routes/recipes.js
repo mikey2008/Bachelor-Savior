@@ -3,7 +3,6 @@
 const express = require('express');
 const db = require('../db/database');
 const requireOwnership = require('../middleware/requireOwnership');
-
 const {
   recipeValidator,
   recipeIdValidator,

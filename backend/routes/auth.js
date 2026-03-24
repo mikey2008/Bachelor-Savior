@@ -8,6 +8,13 @@ const db        = require('../db/database');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/mailer');
 const { loginLimiter, registerLimiter } = require('../middleware/rateLimiters');
 const authenticate = require('../middleware/authenticate');
+const {
+  registerValidator,
+  loginValidator,
+  verifyEmailValidator,
+  forgotPasswordValidator,
+  resetPasswordValidator
+} = require('../middleware/validators');
 
 const router = express.Router();
 

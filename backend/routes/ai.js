@@ -1,9 +1,8 @@
 'use strict';
 
 const express = require('express');
-const fetch = require('node-fetch'); // Assuming node-fetch is available or using built-in fetch in newer Node.js
+// Using built-in fetch (Node 18+)
 const { apiLimiter } = require('../middleware/rateLimiters');
-
 const { aiGenerateValidator } = require('../middleware/validators');
 
 const router = express.Router();
