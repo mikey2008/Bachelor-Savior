@@ -6,7 +6,7 @@
 
 const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
     ? 'http://localhost:3001' 
-    : 'https://bachelor-savior-backend.onrender.com'; // Placeholder: Update this after deployment
+    : 'https://bachelor-savior-api.onrender.com';
 let accessToken = null;
 let currentUser = null;
 let currentRecipeText = "";
