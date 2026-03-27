@@ -23,11 +23,11 @@ function sanitizeError(error) {
     const msg = error.message || String(error);
     if (msg.includes('fetch') || msg.includes('NetworkError')) return 'Connection to kitchen lost. Check your internet.';
     if (msg.includes('401')) return 'Session expired. Please login again.';
-    if (msg.includes('403')) return 'Permission denied.';
+    if (msg.includes('403')) return 'Permission denied. Check if the server is allowed to speak to the AI.';
     if (msg.includes('429')) return 'Too many recipe requests. Slow down!';
     
-    // If it's a specific server error (already includes the cause)
-    if (msg.length > 0 && msg !== 'Gen failed') return msg;
+    // Show exactly what the server said
+    if (msg.length > 0) return `Backend Error: ${msg}`;
     
     return 'Something went wrong. Please try again later.';
 }
@@ -613,8 +613,16 @@ if(cookBtn) cookBtn.onclick = async () => {
             method: 'POST',
             body: JSON.stringify({ prompt })
         });
-        const data = await res.json();
-        if(!res.ok) throw new Error(data.error || "Gen failed");
+        let data;
+        try {
+            data = await res.json();
+        } catch(e) {
+            throw new Error(`Server returned invalid response (Status ${res.status})`);
+        }
+        
+        if(!res.ok) throw new Error(data.error || `Server Error ${res.status}`);
+        
+        if (!data.candidates || !data.candidates[0]) throw new Error("AI returned empty results. Try a different prompt.");
         
         const text = data.candidates[0].content.parts[0].text;
         currentRecipeText = text;
