@@ -25,6 +25,10 @@ function sanitizeError(error) {
     if (msg.includes('401')) return 'Session expired. Please login again.';
     if (msg.includes('403')) return 'Permission denied.';
     if (msg.includes('429')) return 'Too many recipe requests. Slow down!';
+    
+    // If it's a specific server error (already includes the cause)
+    if (msg.length > 0 && msg !== 'Gen failed') return msg;
+    
     return 'Something went wrong. Please try again later.';
 }
 
@@ -609,9 +613,9 @@ if(cookBtn) cookBtn.onclick = async () => {
             method: 'POST',
             body: JSON.stringify({ prompt })
         });
-        if(!res.ok) throw new Error("Gen failed");
-        
         const data = await res.json();
+        if(!res.ok) throw new Error(data.error || "Gen failed");
+        
         const text = data.candidates[0].content.parts[0].text;
         currentRecipeText = text;
         activeViewRecipe = text;
