@@ -31,9 +31,8 @@ app.use('/auth', authRouter);
 // Public API routes (with rate limiting)
 app.use('/api/ai', apiLimiter, aiRouter);
 
-// Protected API routes (require logged-in user)
-app.use('/api', authenticate);
-app.use('/api/recipes', recipesRouter);
+// Protected API routes (ONLY for private recipes)
+app.use('/api/recipes', authenticate, recipesRouter);
 
 
 // Health check
