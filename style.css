@@ -549,6 +549,26 @@ input:focus, textarea:focus {
     font-weight: 600;
 }
 
+.guest-btn {
+    width: 100%;
+    padding: 0.75rem;
+    margin-top: 0.75rem;
+    background: transparent;
+    border: 1px solid #30363d;
+    color: var(--text-light);
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.guest-btn:hover {
+    border-color: var(--text-light);
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.03);
+}
+
 .close-modal-x {
     position: absolute;
     top: 15px;
