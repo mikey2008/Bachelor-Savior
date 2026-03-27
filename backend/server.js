@@ -28,10 +28,12 @@ app.use(cookieParser());
 // Public routes
 app.use('/auth', authRouter);
 
-// Protected API routes – apply JWT auth and rate limiting
-app.use('/api', authenticate, apiLimiter);
+// Public API routes (with rate limiting)
+app.use('/api/ai', apiLimiter, aiRouter);
+
+// Protected API routes (require logged-in user)
+app.use('/api', authenticate);
 app.use('/api/recipes', recipesRouter);
-app.use('/api/ai', aiRouter);
 
 
 // Health check
