@@ -10,6 +10,12 @@ const jwt = require('jsonwebtoken');
  * On failure returns 401 immediately — never exposes JWT internals.
  */
 module.exports = function authenticate(req, res, next) {
+  // --- Guest Bypass for AI ---
+  // Allow recipes to be generated without login (guest mode)
+  if (req.path.startsWith('/ai')) {
+    return next();
+  }
+
   const header = req.headers['authorization'];
 
   if (!header || !header.startsWith('Bearer ')) {
