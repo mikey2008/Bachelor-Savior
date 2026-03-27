@@ -4,7 +4,9 @@
  * and UI state management (Theme, Modals, Profile Menu, Recipe CRUD).
  */
 
-const API_BASE = 'http://localhost:3001';
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+    ? 'http://localhost:3001' 
+    : 'https://bachelor-savior-backend.onrender.com'; // Placeholder: Update this after deployment
 let accessToken = null;
 let currentUser = null;
 let currentRecipeText = "";
