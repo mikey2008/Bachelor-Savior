@@ -416,6 +416,23 @@ function renderSavedList() {
             }
         });
         
+        const editBtn = document.createElement('button');
+        editBtn.className = 'edit-recipe-btn';
+        editBtn.innerHTML = '✏️';
+        editBtn.title = 'Edit Recipe';
+        editBtn.onclick = (e) => {
+            e.stopPropagation();
+            editingRecipeId = recipe.id;
+            if (customRecipeTitle) customRecipeTitle.value = recipe.title;
+            if (customRecipeContent) customRecipeContent.value = recipe.content;
+            const h2 = addRecipeModal.querySelector('h2');
+            if (h2) h2.textContent = 'Edit Your Recipe';
+            if (saveCustomRecipeBtn) saveCustomRecipeBtn.textContent = 'Update Recipe';
+            if (addRecipeModal) addRecipeModal.classList.remove('hidden');
+            const sModal = document.getElementById('savedModal');
+            if(sModal) sModal.classList.add('hidden');
+        };
+
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'delete-recipe-btn';
         deleteBtn.innerHTML = '🗑️';
@@ -430,7 +447,10 @@ function renderSavedList() {
         };
         
         itemContainer.appendChild(btn);
-        if (!isSharingMode) itemContainer.appendChild(deleteBtn);
+        if (!isSharingMode) {
+            itemContainer.appendChild(editBtn);
+            itemContainer.appendChild(deleteBtn);
+        }
         list.appendChild(itemContainer);
     });
 }
@@ -635,6 +655,73 @@ function stopStoryLoader() {
     clearInterval(storyInterval);
     const loader = document.getElementById('storyLoader');
     if(loader) loader.classList.add('hidden');
+}
+
+const addRecipeModal = document.getElementById('addRecipeModal');
+const addCustomRecipeBtn = document.getElementById('addCustomRecipeBtn');
+const cancelAddRecipeBtn = document.getElementById('cancelAddRecipeBtn');
+const saveCustomRecipeBtn = document.getElementById('saveCustomRecipeBtn');
+const customRecipeTitle = document.getElementById('customRecipeTitle');
+const customRecipeContent = document.getElementById('customRecipeContent');
+
+let editingRecipeId = null;
+
+// Manual Add Logic
+if (addCustomRecipeBtn) {
+    addCustomRecipeBtn.onclick = () => {
+        if (!currentUser && !isGuest) { loginModal.classList.remove('hidden'); return; }
+        editingRecipeId = null;
+        if (customRecipeTitle) customRecipeTitle.value = '';
+        if (customRecipeContent) customRecipeContent.value = '';
+        const h2 = addRecipeModal.querySelector('h2');
+        if (h2) h2.textContent = 'Add Your Recipe';
+        if (saveCustomRecipeBtn) saveCustomRecipeBtn.textContent = 'Save Recipe';
+        addRecipeModal.classList.remove('hidden');
+    };
+}
+
+if (cancelAddRecipeBtn) {
+    cancelAddRecipeBtn.onclick = () => {
+        addRecipeModal.classList.add('hidden');
+    };
+}
+
+if (saveCustomRecipeBtn) {
+    saveCustomRecipeBtn.onclick = async () => {
+        const title = customRecipeTitle.value.trim();
+        const content = customRecipeContent.value.trim();
+        if (!title || !content) { alert("Please fill in both title and content."); return; }
+
+        if (isGuest) {
+            alert("Login to save your personal recipes!");
+            return;
+        }
+
+        try {
+            saveCustomRecipeBtn.disabled = true;
+            saveCustomRecipeBtn.textContent = editingRecipeId ? "Updating..." : "Saving...";
+            
+            const method = editingRecipeId ? 'PUT' : 'POST';
+            const url = editingRecipeId ? `/api/recipes/${editingRecipeId}` : '/api/recipes';
+            
+            const res = await fetchWithAuth(url, {
+                method,
+                body: JSON.stringify({ title, content })
+            });
+
+            if (res.ok) {
+                addRecipeModal.classList.add('hidden');
+                loadSavedRecipes();
+            } else {
+                const data = await res.json();
+                alert(data.error || "Failed to save recipe");
+            }
+        } catch (err) { alert(sanitizeError(err)); }
+        finally {
+            saveCustomRecipeBtn.disabled = false;
+            saveCustomRecipeBtn.textContent = "Save Recipe";
+        }
+    };
 }
 
 // Add Ingredient/Restriction Row logic
