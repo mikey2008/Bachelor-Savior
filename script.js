@@ -13,6 +13,8 @@ let isSharingMode = false;
 let selectedForSharing = new Set();
 let currentPage = 0;
 let totalPages = 1;
+let selectedCuisine = 'Any';
+let isGuest = false;
 
 // --- Security Helpers ---
 function sanitizeError(error) {
@@ -143,6 +145,16 @@ function updateAuthUI() {
     }
 }
 
+function continueAsGuest() {
+    isGuest = true;
+    currentUser = { email: 'Guest User', isGuest: true };
+    if (loginModal) loginModal.classList.add('hidden');
+    if (registerModal) registerModal.classList.add('hidden');
+    if (profileDropdown) profileDropdown.style.display = 'none';
+    updateAuthUI();
+    renderSavedList();
+}
+
 async function login(email, password) {
     try {
         const res = await fetch(API_BASE + '/auth/login', {
@@ -158,6 +170,7 @@ async function login(email, password) {
             updateAuthUI();
             if (loginModal) loginModal.classList.add('hidden');
             if (profileDropdown) profileDropdown.style.display = 'none';
+            isGuest = false; // Reset guest status on real login
             loadSavedRecipes(); // Refresh library
             return true;
         } else {
@@ -192,6 +205,7 @@ async function logout() {
     } catch (e) { console.error('Logout request failed', e); }
     accessToken = null;
     currentUser = null;
+    isGuest = false; // Reset guest status on logout
     updateAuthUI();
     if (profileDropdown) profileDropdown.style.display = 'none';
     renderSavedList(); // Clear list
@@ -265,6 +279,45 @@ document.querySelectorAll('.close-modal-x').forEach(btn => {
     }
 });
 
+// Cuisine Selector Toggle
+const cuisineBadge = document.getElementById('cuisineBadge');
+const cuisineModal = document.getElementById('cuisineModal');
+const closeModalBtn = document.getElementById('closeModalBtn');
+
+if (cuisineBadge) {
+    cuisineBadge.onclick = () => {
+        if (cuisineModal) cuisineModal.classList.remove('hidden');
+    };
+}
+
+if (closeModalBtn) {
+    closeModalBtn.onclick = () => {
+        if (cuisineModal) cuisineModal.classList.add('hidden');
+    };
+}
+
+// Cuisine Tag selection
+document.querySelectorAll('.cuisine-tag').forEach(tag => {
+    tag.onclick = () => {
+        // Remove active from all
+        document.querySelectorAll('.cuisine-tag').forEach(t => t.classList.remove('active'));
+        // Add to clicked
+        tag.classList.add('active');
+        // Update selection
+        selectedCuisine = tag.getAttribute('data-cuisine');
+        // Update badge
+        if (cuisineBadge) cuisineBadge.textContent = tag.textContent;
+        // Auto-close
+        if (cuisineModal) cuisineModal.classList.add('hidden');
+    };
+});
+
+// Guest Login
+const gLBtn = document.getElementById('guestLoginBtn');
+const gRBtn = document.getElementById('guestRegisterBtn');
+if (gLBtn) gLBtn.onclick = continueAsGuest;
+if (gRBtn) gRBtn.onclick = continueAsGuest;
+
 // Use IDs that match index.html
 const lBtn = document.getElementById('loginBtn');
 const rBtn = document.getElementById('registerBtn');
@@ -316,6 +369,11 @@ function renderSavedList() {
     
     if (!currentUser) {
         list.innerHTML = `<div style="text-align: center; padding: 2rem 1rem; color: var(--text-light);"><p>Please login to see your saved recipes.</p></div>`;
+        return;
+    }
+
+    if (isGuest) {
+        list.innerHTML = `<div style="text-align: center; padding: 2rem 1rem; color: var(--text-light);"><div style="font-size: 3rem; margin-bottom: 1rem;">👻</div><p>You're in Guest Mode!<br>Login to save your recipes forever.</p></div>`;
         return;
     }
 
@@ -438,8 +496,38 @@ function updatePagination(recipeContent) {
     } else {
         if(nb) nb.classList.add('hidden');
         if(shb) shb.classList.remove('hidden');
-        if(sb) sb.classList.toggle('hidden', !currentRecipeText);
+        
+        const isActuallySaved = savedRecipes.some(r => r.content === activeViewRecipe);
+        if(sb) {
+            sb.classList.toggle('hidden', !activeViewRecipe || isActuallySaved);
+            if (isGuest) {
+                sb.onclick = () => alert("Login to save recipes!");
+            } else {
+                sb.onclick = saveCurrentRecipe;
+            }
+        }
     }
+}
+
+async function saveCurrentRecipe() {
+    if (isGuest || !currentUser) {
+        alert("Please login to save recipes.");
+        loginModal.classList.remove('hidden');
+        return;
+    }
+    
+    const title = getRecipeTitle(activeViewRecipe);
+    try {
+        const res = await fetchWithAuth('/api/recipes', {
+            method: 'POST',
+            body: JSON.stringify({ title, content: activeViewRecipe })
+        });
+        if (res.ok) {
+            alert("Recipe saved!");
+            loadSavedRecipes();
+            updatePagination(document.getElementById('recipeContent'));
+        }
+    } catch (err) { alert(sanitizeError(err)); }
 }
 
 // Additional Event Handlers
@@ -464,7 +552,11 @@ if(saBtn) saBtn.onclick = () => {
 
 const cookBtn = document.getElementById('cookButton');
 if(cookBtn) cookBtn.onclick = async () => {
-    if (!currentUser) { loginModal.classList.remove('hidden'); return; }
+    // Check if user is logged in OR is a guest
+    if (!currentUser && !isGuest) { 
+        loginModal.classList.remove('hidden'); 
+        return; 
+    }
     
     const ingredients = Array.from(document.querySelectorAll('.ingredient-input'))
         .map(i => i.value.trim()).filter(v => v);
