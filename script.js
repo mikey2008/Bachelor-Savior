@@ -538,16 +538,20 @@ if(cookBtn) cookBtn.onclick = async () => {
     setTimeout(() => { if(recipeBook) { recipeBook.classList.remove('closed'); recipeBook.classList.add('open'); } }, 100);
 
     try {
-        const { data, error } = await supabaseClient.functions.invoke('generate-recipe', {
+        const response = await supabaseClient.functions.invoke('generate-recipe', {
             body: { prompt }
         });
         
+        let { data, error } = response;
+        
         if (error) {
-            // Check if error has a detailed message from the edge function
-            let msg = error.message || "Unknown error";
-            if (error.context && error.context.statusText) {
-                msg = `${error.context.statusText} (${error.message})`;
+            // If function returned a 4xx/5xx, check if we got a JSON error body
+            // Some versions of the JS SDK put the JSON response in 'data' even if 'error' is set
+            if (data && data.error) {
+                throw new Error(data.error);
             }
+            // Check if error message is just the generic SDK one, and try to get better context
+            let msg = error.message || "Unknown error";
             throw new Error(msg);
         }
         
@@ -564,7 +568,7 @@ if(cookBtn) cookBtn.onclick = async () => {
         setTimeout(() => updatePagination(recipeContent), 150);
     } catch(err) {
         stopStoryLoader();
-        console.error("Function Error:", err);
+        console.error("Function Error Detail:", err);
         if(recipeContent) {
             recipeContent.innerHTML = `<h2>Error</h2><p>${err.message}</p>`;
         }
