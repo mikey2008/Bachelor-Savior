@@ -1,3 +1,4 @@
+# FORCE_DEPLOY_BLUEPRINT_VERS_1.0.6
 services:
   - type: web
     name: bachelor-savior-api
