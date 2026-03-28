@@ -544,7 +544,10 @@ if(cookBtn) cookBtn.onclick = async () => {
         
         if (error) {
             // Check if error has a detailed message from the edge function
-            const msg = error.context?.statusText || error.message || "Unknown error";
+            let msg = error.message || "Unknown error";
+            if (error.context && error.context.statusText) {
+                msg = `${error.context.statusText} (${error.message})`;
+            }
             throw new Error(msg);
         }
         
@@ -563,7 +566,7 @@ if(cookBtn) cookBtn.onclick = async () => {
         stopStoryLoader();
         console.error("Function Error:", err);
         if(recipeContent) {
-            recipeContent.innerHTML = `<h2>Error</h2><p>${err.message}</p>`.replace('Edge Function returned a non-2xx status code', 'GEMINI_API_KEY missing in Supabase Secrets');
+            recipeContent.innerHTML = `<h2>Error</h2><p>${err.message}</p>`;
         }
     } finally {
          cookBtn.disabled = false;
