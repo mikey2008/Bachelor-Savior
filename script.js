@@ -5,7 +5,7 @@
  */
 
 const SUPABASE_URL = 'https://srwwiytlwqcgzcvkzmck.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNyd3dpeXRsd3FjZ3pjdmt6bWNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2ODg3NDMsImV4cCI6MjA5MDI2NDc0M30.Lz8wGt6xKdtfehhvj_dJniV4TPkDOMX6g3q7RZf1eZw'; // Updated from user input
+const SUPABASE_ANON_KEY = 'sb_publishable_fmHb6GceyN95eDzRMwKBKA_qFJ1WbC7'; // Updated to new standard publishable key
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
