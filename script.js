@@ -4,10 +4,14 @@
  * and UI state management (Theme, Modals, Profile Menu, Recipe CRUD).
  */
 
+const SUPABASE_URL = 'https://srwwiytlwqcgzcvkzmck.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNyd3dpeXRsd3FjZ3pjdmt6bWNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2ODg3NDMsImV4cCI6MjA5MDI2NDc0M30.Lz8wGt6xKdtfehhvj_dJniV4TPkDOMX6g3q7RZf1eZw'; // Updated from user input
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
     ? 'http://localhost:3001' 
     : 'https://bachelor-savior-api.onrender.com';
-let accessToken = null;
+
 let currentUser = null;
 let currentRecipeText = "";
 let activeViewRecipe = null;
@@ -16,7 +20,6 @@ let selectedForSharing = new Set();
 let currentPage = 0;
 let totalPages = 1;
 let selectedCuisine = 'Any';
-let isGuest = false;
 
 // --- Security Helpers ---
 function sanitizeError(error) {
@@ -38,46 +41,16 @@ function sanitizeError(error) {
  * 2. Automatic Refresh Token logic on 401
  * 3. Graceful session expiry handling
  */
+/**
+ * Fetch wrapper for AI generation (Legacy backend proxy)
+ */
 async function fetchWithAuth(url, options = {}) {
     if (!options.headers) options.headers = {};
-    if (accessToken) {
-        options.headers['Authorization'] = `Bearer ${accessToken}`;
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) {
+        options.headers['Authorization'] = `Bearer ${session.access_token}`;
     }
-    options.credentials = 'include'; // Ensure cookies (Refresh Token) are sent
-
-    let res = await fetch(API_BASE + url, options);
-
-    // If 401, try to refresh once
-    if (res.status === 401) {
-        const refreshed = await silentlyRefresh();
-        if (refreshed) {
-            options.headers['Authorization'] = `Bearer ${accessToken}`;
-            res = await fetch(API_BASE + url, options);
-        } else {
-            // Session actually expired
-            currentUser = null;
-            accessToken = null;
-            updateAuthUI();
-            // Optional: Show login modal
-            // document.getElementById('loginModal').classList.remove('hidden');
-        }
-    }
-    return res;
-}
-
-async function silentlyRefresh() {
-    try {
-        const res = await fetch(API_BASE + '/auth/refresh', {
-            method: 'POST',
-            credentials: 'include'
-        });
-        if (res.ok) {
-            const data = await res.json();
-            accessToken = data.accessToken;
-            return true;
-        }
-    } catch (e) { console.error('Silent refresh failed', e); }
-    return false;
+    return fetch(API_BASE + url, options);
 }
 
 // --- UI Elements ---
@@ -125,15 +98,14 @@ document.addEventListener('click', (e) => {
 
 async function checkAuth() {
     try {
-        const res = await fetchWithAuth('/auth/me');
-        if (res.ok) {
-            const data = await res.json();
-            currentUser = data.user;
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (user) {
+            currentUser = user;
             updateAuthUI();
+            loadSavedRecipes();
             return true;
         }
     } catch (e) { console.error('Auth check failed', e); }
-    accessToken = null;
     currentUser = null;
     updateAuthUI();
     return false;
@@ -151,70 +123,41 @@ function updateAuthUI() {
     }
 }
 
-function continueAsGuest() {
-    isGuest = true;
-    currentUser = { email: 'Guest User', isGuest: true };
-    if (loginModal) loginModal.classList.add('hidden');
-    if (registerModal) registerModal.classList.add('hidden');
-    if (profileDropdown) profileDropdown.style.display = 'none';
-    updateAuthUI();
-    renderSavedList();
-}
-
 async function login(email, password) {
     try {
-        const res = await fetch(API_BASE + '/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
-            credentials: 'include'
-        });
-        const data = await res.json();
-        if (res.ok) {
-            accessToken = data.accessToken;
-            currentUser = data.user;
-            updateAuthUI();
-            if (loginModal) loginModal.classList.add('hidden');
-            if (profileDropdown) profileDropdown.style.display = 'none';
-            isGuest = false; // Reset guest status on real login
-            loadSavedRecipes(); // Refresh library
-            return true;
-        } else {
-            alert(data.error || 'Login failed');
-        }
-    } catch (e) { alert(sanitizeError(e)); }
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        
+        currentUser = data.user;
+        updateAuthUI();
+        if (loginModal) loginModal.classList.add('hidden');
+        if (profileDropdown) profileDropdown.style.display = 'none';
+        loadSavedRecipes();
+        return true;
+    } catch (e) { alert(e.message || 'Login failed'); }
     return false;
 }
 
 async function register(email, password) {
     try {
-        const res = await fetch(API_BASE + '/auth/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
-        const data = await res.json();
-        if (res.ok) {
-            alert(data.message || 'Account created! Please verify your email.');
-            if (registerModal) registerModal.classList.add('hidden');
-            return true;
-        } else {
-            alert(data.error || 'Registration failed');
-        }
-    } catch (e) { alert(sanitizeError(e)); }
+        const { data, error } = await supabaseClient.auth.signUp({ email, password });
+        if (error) throw error;
+        
+        alert('Registration successful! Please check your email to verify your account.');
+        if (registerModal) registerModal.classList.add('hidden');
+        return true;
+    } catch (e) { alert(e.message || 'Registration failed'); }
     return false;
 }
 
 async function logout() {
     try {
-        await fetch(API_BASE + '/auth/logout', { method: 'POST', credentials: 'include' });
-    } catch (e) { console.error('Logout request failed', e); }
-    accessToken = null;
+        await supabaseClient.auth.signOut();
+    } catch (e) { console.error('Logout failed', e); }
     currentUser = null;
-    isGuest = false; // Reset guest status on logout
     updateAuthUI();
     if (profileDropdown) profileDropdown.style.display = 'none';
-    renderSavedList(); // Clear list
+    renderSavedList();
 }
 
 // --- UI Helpers ---
@@ -272,10 +215,7 @@ function updateModalTitle() {
 // --- DOM Event Listeners ---
 
 window.addEventListener('DOMContentLoaded', () => {
-    silentlyRefresh().then(success => {
-        if (success) checkAuth();
-        else updateAuthUI(); // Initial logged out state
-    });
+    checkAuth();
 });
 
 document.querySelectorAll('.close-modal-x').forEach(btn => {
@@ -318,12 +258,6 @@ document.querySelectorAll('.cuisine-tag').forEach(tag => {
     };
 });
 
-// Guest Login
-const gLBtn = document.getElementById('guestLoginBtn');
-const gRBtn = document.getElementById('guestRegisterBtn');
-if (gLBtn) gLBtn.onclick = continueAsGuest;
-if (gRBtn) gRBtn.onclick = continueAsGuest;
-
 // Use IDs that match index.html
 const lBtn = document.getElementById('loginBtn');
 const rBtn = document.getElementById('registerBtn');
@@ -359,12 +293,14 @@ let savedRecipes = [];
 async function loadSavedRecipes() {
     if (!currentUser) return;
     try {
-        const res = await fetchWithAuth('/api/recipes');
-        if (res.ok) {
-            const data = await res.json();
-            savedRecipes = data.recipes;
-            renderSavedList();
-        }
+        const { data, error } = await supabaseClient
+            .from('recipes')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        savedRecipes = data;
+        renderSavedList();
     } catch (e) { console.error('Failed to load recipes', e); }
 }
 
@@ -375,11 +311,6 @@ function renderSavedList() {
     
     if (!currentUser) {
         list.innerHTML = `<div style="text-align: center; padding: 2rem 1rem; color: var(--text-light);"><p>Please login to see your saved recipes.</p></div>`;
-        return;
-    }
-
-    if (isGuest) {
-        list.innerHTML = `<div style="text-align: center; padding: 2rem 1rem; color: var(--text-light);"><div style="font-size: 3rem; margin-bottom: 1rem;">👻</div><p>You're in Guest Mode!<br>Login to save your recipes forever.</p></div>`;
         return;
     }
 
@@ -444,9 +375,13 @@ function renderSavedList() {
             e.stopPropagation();
             if(confirm(`Delete "${title}"?`)) {
                 try {
-                    const res = await fetchWithAuth(`/api/recipes/${recipe.id}`, { method: 'DELETE' });
-                    if (res.ok) loadSavedRecipes();
-                } catch (err) { alert(sanitizeError(err)); }
+                    const { error } = await supabaseClient
+                        .from('recipes')
+                        .delete()
+                        .eq('id', recipe.id);
+                    if (error) throw error;
+                    loadSavedRecipes();
+                } catch (err) { alert(err.message || 'Delete failed'); }
             }
         };
         
@@ -526,17 +461,13 @@ function updatePagination(recipeContent) {
         const isActuallySaved = savedRecipes.some(r => r.content === activeViewRecipe);
         if(sb) {
             sb.classList.toggle('hidden', !activeViewRecipe || isActuallySaved);
-            if (isGuest) {
-                sb.onclick = () => alert("Login to save recipes!");
-            } else {
-                sb.onclick = saveCurrentRecipe;
-            }
+            sb.onclick = saveCurrentRecipe;
         }
     }
 }
 
 async function saveCurrentRecipe() {
-    if (isGuest || !currentUser) {
+    if (!currentUser) {
         alert("Please login to save recipes.");
         loginModal.classList.remove('hidden');
         return;
@@ -544,16 +475,20 @@ async function saveCurrentRecipe() {
     
     const title = getRecipeTitle(activeViewRecipe);
     try {
-        const res = await fetchWithAuth('/api/recipes', {
-            method: 'POST',
-            body: JSON.stringify({ title, content: activeViewRecipe })
-        });
-        if (res.ok) {
-            alert("Recipe saved!");
-            loadSavedRecipes();
-            updatePagination(document.getElementById('recipeContent'));
-        }
-    } catch (err) { alert(sanitizeError(err)); }
+        const { error } = await supabaseClient
+            .from('recipes')
+            .insert({
+                user_id: currentUser.id,
+                title: title,
+                content: activeViewRecipe
+            });
+        
+        if (error) throw error;
+        
+        alert("Recipe saved!");
+        loadSavedRecipes();
+        updatePagination(document.getElementById('recipeContent'));
+    } catch (err) { alert(err.message || "Failed to save recipe"); }
 }
 
 // Additional Event Handlers
@@ -578,12 +513,6 @@ if(saBtn) saBtn.onclick = () => {
 
 const cookBtn = document.getElementById('cookButton');
 if(cookBtn) cookBtn.onclick = async () => {
-    // Check if user is logged in OR is a guest
-    if (!currentUser && !isGuest) { 
-        loginModal.classList.remove('hidden'); 
-        return; 
-    }
-    
     const ingredients = Array.from(document.querySelectorAll('.ingredient-input'))
         .map(i => i.value.trim()).filter(v => v);
     if(ingredients.length === 0) { alert("Add ingredients!"); return; }
@@ -609,18 +538,11 @@ if(cookBtn) cookBtn.onclick = async () => {
     setTimeout(() => { if(recipeBook) { recipeBook.classList.remove('closed'); recipeBook.classList.add('open'); } }, 100);
 
     try {
-        const res = await fetchWithAuth('/api/ai/generate', {
-            method: 'POST',
-            body: JSON.stringify({ prompt })
+        const { data, error } = await supabaseClient.functions.invoke('generate-recipe', {
+            body: { prompt }
         });
-        let data;
-        try {
-            data = await res.json();
-        } catch(e) {
-            throw new Error(`Server returned invalid response (Status ${res.status})`);
-        }
         
-        if(!res.ok) throw new Error(data.error || `Server Error ${res.status}`);
+        if (error) throw error;
         
         if (!data.candidates || !data.candidates[0]) throw new Error("AI returned empty results. Try a different prompt.");
         
@@ -633,10 +555,10 @@ if(cookBtn) cookBtn.onclick = async () => {
         setTimeout(() => updatePagination(recipeContent), 150);
     } catch(err) {
         stopStoryLoader();
-        if(recipeContent) recipeContent.innerHTML = `<h2>Error</h2><p>${sanitizeError(err)}</p>`;
+        if(recipeContent) recipeContent.innerHTML = `<h2>Error</h2><p>${err.message || sanitizeError(err)}</p>`;
     } finally {
-        cookBtn.disabled = false;
-        cookBtn.textContent = "Cook Magic 😋";
+         cookButton.disabled = false;
+         cookButton.textContent = "Cook Magic 😋";
     }
 };
 
@@ -681,7 +603,7 @@ let editingRecipeId = null;
 // Manual Add Logic
 if (addCustomRecipeBtn) {
     addCustomRecipeBtn.onclick = () => {
-        if (!currentUser && !isGuest) { loginModal.classList.remove('hidden'); return; }
+        if (!currentUser) { loginModal.classList.remove('hidden'); return; }
         editingRecipeId = null;
         if (customRecipeTitle) customRecipeTitle.value = '';
         if (customRecipeContent) customRecipeContent.value = '';
@@ -704,31 +626,27 @@ if (saveCustomRecipeBtn) {
         const content = customRecipeContent.value.trim();
         if (!title || !content) { alert("Please fill in both title and content."); return; }
 
-        if (isGuest) {
-            alert("Login to save your personal recipes!");
-            return;
-        }
-
         try {
             saveCustomRecipeBtn.disabled = true;
             saveCustomRecipeBtn.textContent = editingRecipeId ? "Updating..." : "Saving...";
             
-            const method = editingRecipeId ? 'PUT' : 'POST';
-            const url = editingRecipeId ? `/api/recipes/${editingRecipeId}` : '/api/recipes';
-            
-            const res = await fetchWithAuth(url, {
-                method,
-                body: JSON.stringify({ title, content })
-            });
-
-            if (res.ok) {
-                addRecipeModal.classList.add('hidden');
-                loadSavedRecipes();
+            let result;
+            if (editingRecipeId) {
+                result = await supabaseClient
+                    .from('recipes')
+                    .update({ title, content })
+                    .eq('id', editingRecipeId);
             } else {
-                const data = await res.json();
-                alert(data.error || "Failed to save recipe");
+                result = await supabaseClient
+                    .from('recipes')
+                    .insert({ user_id: currentUser.id, title, content });
             }
-        } catch (err) { alert(sanitizeError(err)); }
+
+            if (result.error) throw result.error;
+
+            addRecipeModal.classList.add('hidden');
+            loadSavedRecipes();
+        } catch (err) { alert(err.message || "Failed to save recipe"); }
         finally {
             saveCustomRecipeBtn.disabled = false;
             saveCustomRecipeBtn.textContent = "Save Recipe";
