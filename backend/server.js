@@ -35,13 +35,22 @@ app.use('/api/ai', apiLimiter, aiRouter);
 app.use('/api/recipes', authenticate, recipesRouter);
 
 // Version endpoint for "Dora" verification
-app.get('/api/version', (req, res) => res.json({ version: '1.0.4', mode: 'Bulletproof' }));
+app.get('/api/version', (req, res) => res.json({ version: '1.0.5', mode: 'Bulletproof' }));
+
+// Special Dora Magic route to test Guest AI with fallback keys directly in browser
+app.get('/api/dora-magic', async (req, res) => {
+  const testPrompt = "Suggest a simple 1-sentence recipe with paneer.";
+  // This will trigger the actual generate logic from ai.js for testing
+  req.body = { prompt: testPrompt };
+  const aiRouter = require('./routes/ai');
+  return aiRouter.handle(req, res); // Try to execute the same logic
+});
 
 
 // Health check
 app.get('/', (req, res) => res.send('Bachelor Savior backend is running'));
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server v1.0.4: VERSION VERIFICATION ON`);
-  console.log(`✨ Point Dora to /api/version`);
+  console.log(`🚀 Server v1.0.5: DORA MAGIC READY`);
+  console.log(`✨ Version verified at /api/version`);
 });
