@@ -34,11 +34,14 @@ app.use('/api/ai', apiLimiter, aiRouter);
 // Protected API routes (ONLY for private recipes)
 app.use('/api/recipes', authenticate, recipesRouter);
 
+// Version endpoint for "Dora" verification
+app.get('/api/version', (req, res) => res.json({ version: '1.0.4', mode: 'Bulletproof' }));
+
 
 // Health check
 app.get('/', (req, res) => res.send('Bachelor Savior backend is running'));
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server v1.0.3: MODEL HUNTER MODE ON`);
-  console.log(`✨ Redundant API paths activated (v1 & v1beta).`);
+  console.log(`🚀 Server v1.0.4: VERSION VERIFICATION ON`);
+  console.log(`✨ Point Dora to /api/version`);
 });
