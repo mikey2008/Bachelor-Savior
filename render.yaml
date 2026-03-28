@@ -1,18 +1,19 @@
-# FORCE_DEPLOY_BLUEPRINT_VERS_1.0.6
+# FORCE_DEPLOY_BLUEPRINT_VERS_1.0.7
 services:
-  - type: web
-    name: bachelor-savior-api
+- type: web
+  name: bachelor-savior-api
     plan: free
-    runtime: node
-    rootDir: backend
-    buildCommand: npm install
-    startCommand: node server.js
-    envVars:
-      - key: FRONTEND_URL
-        value: https://mikey2008.github.io,http://localhost:8080
-      - key: JWT_SECRET
-        generateValue: true
-      - key: JWT_REFRESH_SECRET
-        generateValue: true
-      - key: GEMINI_API_KEY
-        placeholder: "Paste your Gemini API Key here"
+      runtime: node
+        rootDir: backend
+          buildCommand: npm install
+            startCommand: node server.js
+              envVars:
+                - key: FRONTEND_URL
+                    value: https://mikey2008.github.io,http://localhost:8080
+                      - key: JWT_SECRET
+                          generateValue: true
+                            - key: JWT_REFRESH_SECRET
+                                generateValue: true
+                                  - key: GEMINI_API_KEY
+                                      sync: false
+                                      
