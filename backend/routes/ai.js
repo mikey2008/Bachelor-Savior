@@ -14,10 +14,11 @@ router.post('/generate', apiLimiter, aiGenerateValidator, async (req, res) => {
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      return res.status(500).json({ error: 'Gemini API key not configured on server.' });
+      return res.status(500).json({ error: 'Gemini API key not configured on server (Check Render Environment).' });
     }
 
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // Using v1 for better stability with newer keys
+    const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(apiUrl, {
       method: 'POST',
