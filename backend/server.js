@@ -39,6 +39,6 @@ app.use('/api/recipes', authenticate, recipesRouter);
 app.get('/', (req, res) => res.send('Bachelor Savior backend is running'));
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server v1.0.2: BULLETPROOF MODE ON`);
-  console.log(`✨ Guest AI Access: UNLOCKED & REDUNDANT`);
+  console.log(`🚀 Server v1.0.3: MODEL HUNTER MODE ON`);
+  console.log(`✨ Redundant API paths activated (v1 & v1beta).`);
 });

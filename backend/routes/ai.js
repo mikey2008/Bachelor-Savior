@@ -19,36 +19,46 @@ router.post('/generate', apiLimiter, aiGenerateValidator, async (req, res) => {
       'AIzaSyBkLDRZS0plrYrxgqOijMUQ9HUuLBHWcco'  // USER_KEY_2 (Backup)
     ];
     
-    const tryKeys = primaryKey ? [primaryKey, ...fallbackKeys] : fallbackKeys;
-    const tryModels = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-1.5-flash-latest'];
+    const tryModels = [
+      'gemini-2.0-flash',        // User's key specifically listed this!
+      'gemini-2.0-flash-lite', 
+      'gemini-1.5-flash', 
+      'gemini-1.5-pro'
+    ];
+    const tryVersions = ['v1beta', 'v1']; // Try both API versions
 
     let lastError = null;
 
     for (const key of tryKeys) {
+      if (!key || key.includes('placeholder')) continue;
+      
       for (const model of tryModels) {
-        try {
-          const apiUrl = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${key}`;
-          
-          const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
-            })
-          });
+        for (const version of tryVersions) {
+          try {
+            const apiUrl = `https://generativelanguage.googleapis.com/${version}/models/${model}:generateContent?key=${key}`;
+            
+            const response = await fetch(apiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+              })
+            });
 
-          if (response.ok) {
-            const data = await response.json();
-            return res.json(data); // ✨ SUCCESS!
+            if (response.ok) {
+              const data = await response.json();
+              console.log(`✨ AI Success: Used ${model} (${version}) with key ${key.slice(0, 8)}...`);
+              return res.json(data); 
+            }
+            
+            const errData = await response.json();
+            lastError = errData.error?.message || `Status ${response.status}`;
+            console.warn(`[Cycle 2] ${model} (${version}) failed: ${lastError}`);
+
+          } catch (innerErr) {
+            lastError = innerErr.message;
           }
-          
-          const errData = await response.json();
-          lastError = errData.error?.message || `Status ${response.status}`;
-          console.warn(`Model ${model} failed with key ${key.slice(0, 8)}...: ${lastError}`);
-
-        } catch (innerErr) {
-          lastError = innerErr.message;
         }
       }
     }
