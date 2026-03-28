@@ -538,21 +538,21 @@ if(cookBtn) cookBtn.onclick = async () => {
     setTimeout(() => { if(recipeBook) { recipeBook.classList.remove('closed'); recipeBook.classList.add('open'); } }, 100);
 
     try {
-        const response = await supabaseClient.functions.invoke('generate-recipe', {
-            body: { prompt }
+        // Switching to raw fetch to bypass SDK masking and see the real error body
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-recipe`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            },
+            body: JSON.stringify({ prompt })
         });
         
-        let { data, error } = response;
+        const data = await response.json();
         
-        if (error) {
-            // If function returned a 4xx/5xx, check if we got a JSON error body
-            // Some versions of the JS SDK put the JSON response in 'data' even if 'error' is set
-            if (data && data.error) {
-                throw new Error(data.error);
-            }
-            // Check if error message is just the generic SDK one, and try to get better context
-            let msg = error.message || "Unknown error";
-            throw new Error(msg);
+        if (!response.ok) {
+            // This will show "GEMINI_API_KEY missing" or other specific Gemini errors
+            throw new Error(data.error || data.message || `Error ${response.status}: ${response.statusText}`);
         }
         
         if (!data || !data.candidates || !data.candidates[0]) {
@@ -568,7 +568,7 @@ if(cookBtn) cookBtn.onclick = async () => {
         setTimeout(() => updatePagination(recipeContent), 150);
     } catch(err) {
         stopStoryLoader();
-        console.error("Function Error Detail:", err);
+        console.error("DEBUG - Raw Response Error:", err);
         if(recipeContent) {
             recipeContent.innerHTML = `<h2>Error</h2><p>${err.message}</p>`;
         }
