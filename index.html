@@ -12,7 +12,7 @@
          • frame-ancestors 'none' — identical to X-Frame-Options DENY
          • upgrade-insecure-requests — force https:// sub-resources
     -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.gstatic.com; connect-src 'self' http://localhost:3001 https://generativelanguage.googleapis.com https://bachelor-savior-api.onrender.com; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.gstatic.com; connect-src 'self' http://localhost:3001 https://srwwiytlwqcgzcvkzmck.supabase.co https://generativelanguage.googleapis.com https://bachelor-savior-api.onrender.com; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;">
     <title>🧑‍🍳 Bachelor Savior</title>
     <!-- Modern typography from Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -135,7 +135,6 @@
                         <input type="email" id="loginEmail" placeholder="Email" required>
                         <input type="password" id="loginPassword" placeholder="Password" required>
                         <button id="submitLoginBtn" class="gradient-button">Login</button>
-                        <button id="guestLoginBtn" class="guest-btn">Continue as Guest</button>
                         <p class="auth-switch">Don't have an account? <a href="#" id="switchToRegister">Register</a></p>
                     </div>
                     <button class="close-modal-x" aria-label="Close">&times;</button>
@@ -151,7 +150,6 @@
                         <input type="email" id="registerEmail" placeholder="Email" required>
                         <input type="password" id="registerPassword" placeholder="Password (Min 8 chars, A-z, 0-9)" required>
                         <button id="submitRegisterBtn" class="gradient-button">Create Account</button>
-                        <button id="guestRegisterBtn" class="guest-btn">Continue as Guest</button>
                         <p class="auth-switch">Already have an account? <a href="#" id="switchToLogin">Login</a></p>
                     </div>
                     <button class="close-modal-x" aria-label="Close">&times;</button>
@@ -239,10 +237,12 @@
         </main>
     </div>
 
+    <!-- Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- DOMPurify: sanitize HTML before inserting into DOM (XSS prevention) -->
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <!-- For parsing markdown from Gemini response -->
     <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
-    <script src="script.js?v=4"></script>
+    <script src="script.js?v=5"></script>
 </body>
 </html>
