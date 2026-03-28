@@ -542,9 +542,15 @@ if(cookBtn) cookBtn.onclick = async () => {
             body: { prompt }
         });
         
-        if (error) throw error;
+        if (error) {
+            // Check if error has a detailed message from the edge function
+            const msg = error.context?.statusText || error.message || "Unknown error";
+            throw new Error(msg);
+        }
         
-        if (!data.candidates || !data.candidates[0]) throw new Error("AI returned empty results. Try a different prompt.");
+        if (!data || !data.candidates || !data.candidates[0]) {
+            throw new Error("AI returned empty results. Try a different prompt.");
+        }
         
         const text = data.candidates[0].content.parts[0].text;
         currentRecipeText = text;
@@ -555,10 +561,13 @@ if(cookBtn) cookBtn.onclick = async () => {
         setTimeout(() => updatePagination(recipeContent), 150);
     } catch(err) {
         stopStoryLoader();
-        if(recipeContent) recipeContent.innerHTML = `<h2>Error</h2><p>${err.message || sanitizeError(err)}</p>`;
+        console.error("Function Error:", err);
+        if(recipeContent) {
+            recipeContent.innerHTML = `<h2>Error</h2><p>${err.message}</p>`.replace('Edge Function returned a non-2xx status code', 'GEMINI_API_KEY missing in Supabase Secrets');
+        }
     } finally {
-         cookButton.disabled = false;
-         cookButton.textContent = "Cook Magic 😋";
+         cookBtn.disabled = false;
+         cookBtn.textContent = "Cook Magic 😋";
     }
 };
 
