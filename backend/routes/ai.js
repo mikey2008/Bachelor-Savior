@@ -7,45 +7,59 @@ const { aiGenerateValidator } = require('../middleware/validators');
 
 const router = express.Router();
 
-// POST /ai/generate - Proxy for Gemini API
+// POST /ai/generate - Proxy for Gemini API with Bulletproof Fallbacks
 router.post('/generate', apiLimiter, aiGenerateValidator, async (req, res) => {
   try {
     const { prompt } = req.body;
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return res.status(500).json({ error: 'Gemini API key not configured on server (Check Render Environment).' });
+    // --- Key Selection: Env Var > User Key 1 > User Key 2 ---
+    const primaryKey = process.env.GEMINI_API_KEY;
+    const fallbackKeys = [
+      'AIzaSyCqtBswjVnjRq7IK5_quXboUjE7IASlgKw', // USER_KEY_1
+      'AIzaSyBkLDRZS0plrYrxgqOijMUQ9HUuLBHWcco'  // USER_KEY_2 (Backup)
+    ];
+    
+    const tryKeys = primaryKey ? [primaryKey, ...fallbackKeys] : fallbackKeys;
+    const tryModels = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-1.5-flash-latest'];
+
+    let lastError = null;
+
+    for (const key of tryKeys) {
+      for (const model of tryModels) {
+        try {
+          const apiUrl = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${key}`;
+          
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+            })
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            return res.json(data); // ✨ SUCCESS!
+          }
+          
+          const errData = await response.json();
+          lastError = errData.error?.message || `Status ${response.status}`;
+          console.warn(`Model ${model} failed with key ${key.slice(0, 8)}...: ${lastError}`);
+
+        } catch (innerErr) {
+          lastError = innerErr.message;
+        }
+      }
     }
 
-    // Using v1 for better stability with newer keys
-    const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 8192,
-        }
-      })
+    // If we're here, everything failed
+    res.status(502).json({ 
+      error: `All AI paths exhausted. Last error: ${lastError}. Please ensure the Gemini API is enabled for these keys.`
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      return res.status(response.status).json({ error: errorData.error?.message || 'Failed to fetch from Gemini API' });
-    }
-
-    const data = await response.json();
-    res.json(data);
-
   } catch (err) {
-    console.error('AI Proxy Error:', err);
+    console.error('AI Proxy Critical Error:', err);
     res.status(500).json({ error: 'Server error processing AI request.' });
   }
 });

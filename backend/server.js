@@ -19,15 +19,7 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow all origins for the AI generation route specifically, or check against FRONTEND_URL
-    const allowedOrigins = (process.env.FRONTEND_URL || '').split(',');
-    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.some(o => origin.startsWith(o)) || origin.includes('github.io')) {
-      callback(null, true);
-    } else {
-      callback(null, true); // Allow all for now to "do it" and fix the 400/401 once and for all
-    }
-  },
+  origin: true, // Allow ALL origins dynamically
   credentials: true,
 }));
 app.use(express.json());
@@ -47,6 +39,6 @@ app.use('/api/recipes', authenticate, recipesRouter);
 app.get('/', (req, res) => res.send('Bachelor Savior backend is running'));
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server v1.0.1: Guest AI Access is ENABLED and UNLOCKED!`);
-  console.log(`🌍 Allowed Frontend: ${process.env.FRONTEND_URL || 'Any'}`);
+  console.log(`🚀 Server v1.0.2: BULLETPROOF MODE ON`);
+  console.log(`✨ Guest AI Access: UNLOCKED & REDUNDANT`);
 });
