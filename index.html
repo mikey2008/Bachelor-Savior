@@ -3,248 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Content Security Policy:
-         • script-src  — only self + pinned CDN (DOMPurify, marked)
-         • connect-src — only the Gemini API; blocks all other XHR/WS
-         • object-src 'none' — no Flash / plugin embeds
-         • base-uri 'self'   — prevent base-tag hijacking
-         • form-action 'self'— prevent cross-origin form submission
-         • frame-ancestors 'none' — identical to X-Frame-Options DENY
-         • upgrade-insecure-requests — force https:// sub-resources
-    -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.gstatic.com; connect-src 'self' https://cdn.jsdelivr.net https://srwwiytlwqcgzcvkzmck.supabase.co https://generativelanguage.googleapis.com; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;">
-    <title>🧑‍🍳 Bachelor Savior</title>
-    <!-- Emoji Favicon to prevent 404 errors -->
+    <title>Bachelor Savior</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧑‍🍳</text></svg>">
-    <!-- Modern typography from Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=15">
-    <!-- reCAPTCHA v2 script (enable when you have a real site key)
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-    -->
+    <link rel="stylesheet" href="./src/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
 </head>
-
 <body>
-    <!-- Theme Toggle -->
-    <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
-        <span class="icon sun">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-        </span>
-        <span class="icon moon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-        </span>
-    </button>
-    
-    <div class="top-right-controls">
-        <div class="profile-menu-container">
-            <button id="profileBtn" class="header-btn" aria-label="Profile" title="Profile">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+    <div class="top-nav">
+        <button id="themeToggle" class="nav-btn circular" aria-label="Toggle theme">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="sun"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="moon hidden"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+
+        <div class="nav-right">
+            <button id="profileBtn" class="nav-btn" aria-label="Profile">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             </button>
-            <div id="profileDropdown" class="profile-dropdown" style="display: none;">
-                <div id="dropdownAuth" class="auth-menu">
-                    <button id="loginBtn" class="dropdown-item">Login</button>
-                    <button id="registerBtn" class="dropdown-item">Register</button>
-                </div>
-                <div id="dropdownUser" class="auth-menu" style="display: none;">
-                    <div class="user-info-dropdown">
-                        <span id="dropdownEmailSpan" class="dropdown-email"></span>
-                    </div>
-                    <div class="dropdown-divider"></div>
-                    <button id="logoutBtn" class="dropdown-item danger">
-                        <span>Logout</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                    </button>
-                </div>
-            </div>
+            <button id="addManualBtn" class="nav-btn" aria-label="Add manual recipe">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
+            <button id="viewSavedBtn" class="nav-btn" aria-label="View saved recipes">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>
+            </button>
         </div>
-
-        <!-- Add Custom Recipe -->
-        <button id="addCustomRecipeBtn" class="header-btn" aria-label="Add custom recipe" title="Add Recipe">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-        </button>
-        <!-- View Saved Recipes -->
-        <button id="viewSavedBtn" class="header-btn" aria-label="View saved recipes" title="Library">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>
-        </button>
     </div>
-
 
     <div class="container">
         <header>
-            <h1>🧑‍🍳 Bachelor Savior</h1>
-            <p class="subtitle">Enter the ingredients to discover a magical recipe!</p>
+            <div class="logo-container">
+                <span class="chef-emoji">🧑‍🍳</span>
+                <h1 style="margin-top: 0.5rem; font-weight: 700; letter-spacing: -1px;">Bachelor Savior</h1>
+            </div>
+            <p class="subtitle" style="margin-top: -0.5rem; font-weight: 500;">Enter the ingredients to discover a magical recipe!</p>
         </header>
 
         <main>
-            <!-- Cuisine Modal -->
-            <div id="cuisineModal" class="modal hidden">
-                <div class="modal-content">
-                    <h2>Select Cuisine Style</h2>
-                    <div class="cuisine-grid">
-                        <button class="cuisine-tag active" data-cuisine="Any">🌍 Any</button>
-                        <button class="cuisine-tag" data-cuisine="Italian">🍝 Italian</button>
-                        <button class="cuisine-tag" data-cuisine="Indian">🍛 Indian</button>
-                        <button class="cuisine-tag" data-cuisine="Mexican">🌮 Mexican</button>
-                        <button class="cuisine-tag" data-cuisine="Chinese">🥡 Chinese</button>
-                        <button class="cuisine-tag" data-cuisine="Japanese">🍣 Japanese</button>
-                        <button class="cuisine-tag" data-cuisine="Thai">🍜 Thai</button>
-                        <button class="cuisine-tag" data-cuisine="Mediterranean">🥗 Mediterranean</button>
-                        <button class="cuisine-tag" data-cuisine="French">🥐 French</button>
-                        <button class="cuisine-tag" data-cuisine="American">🍔 American</button>
-                    </div>
-                    <button id="closeModalBtn" class="close-modal">Done</button>
-                </div>
-            </div>
-
-            <!-- Saved Recipes Modal -->
-            <div id="savedModal" class="modal hidden">
-                <div class="modal-content">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                        <button id="cancelShareModeBtn" class="share-modal-btn" aria-label="Cancel Share" style="visibility: hidden;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                        </button>
-                        <h2 style="margin-bottom: 0; text-align: center; flex-grow: 1;">Your Saved Magic</h2>
-                        <button id="shareAllRecipesBtn" class="share-modal-btn" aria-label="Share recipes">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-                        </button>
-                    </div>
-                    <div id="savedRecipesList" class="saved-list">
-                        <!-- Recipe buttons will be injected here via JS -->
-                    </div>
-                    <button id="closeSavedModalBtn" class="close-modal">Close</button>
-                </div>
-            </div>
-
-            <!-- Add Custom Recipe Modal -->
-            <div id="addRecipeModal" class="modal hidden">
-                <div class="modal-content" style="max-width: 500px;">
-                    <h2>Add Your Recipe</h2>
-                    <input type="text" id="customRecipeTitle" placeholder="Recipe Title" style="margin-bottom: 1rem; width: 100%;">
-                    <textarea id="customRecipeContent" placeholder="Ingredients, Instructions..." style="min-height: 15rem; margin-bottom: 1.5rem; width: 100%; resize: vertical; font-family: inherit; line-height: 1.5;"></textarea>
-                    <div style="display: flex; gap: 10px;">
-                        <button id="cancelAddRecipeBtn" class="close-modal">Cancel</button>
-                        <button id="saveCustomRecipeBtn" class="gradient-button" style="padding: 0.75rem; margin-top: 0;">Save Recipe</button>
+            <!-- Ingredients Section -->
+            <div class="input-group-container">
+                <div id="ingredientsContainer" class="input-group">
+                    <div class="input-wrapper has-badge">
+                        <input type="text" class="ingredient-input" placeholder="Ingredient (e.g., Chicken)">
+                        <button id="cuisineBadge" class="cuisine-badge">🌍 Any</button>
                     </div>
                 </div>
+                <div class="link-row">
+                    <button id="clearIngredientsBtn" class="link-btn red">Clear All</button>
+                    <button id="addIngredientBtn" class="link-btn teal">+ Add Ingredient</button>
+                </div>
             </div>
 
-            <!-- Login Modal -->
-            <div id="loginModal" class="modal hidden">
-                <div class="modal-content auth-modal">
-                    <h2>Welcome Back</h2>
-                    <p class="auth-subtitle">Login to access your saved recipes</p>
-                    <div class="auth-form">
-                        <input type="email" id="loginEmail" placeholder="Email" required>
-                        <input type="password" id="loginPassword" placeholder="Password" required>
-                        <button id="submitLoginBtn" class="gradient-button">Login</button>
-                        <p class="auth-switch">Don't have an account? <a href="#" id="switchToRegister">Register</a></p>
+            <!-- Restrictions Section -->
+            <div class="input-group-container">
+                <div id="restrictionsContainer" class="input-group">
+                    <div class="input-wrapper">
+                        <input type="text" class="restriction-input" placeholder="Dietary Filter (Optional, e.g., Vegan)">
+                        <span class="info-tag">i</span>
                     </div>
-                    <button class="close-modal-x" aria-label="Close">&times;</button>
+                </div>
+                <div class="link-row end">
+                    <button id="addRestrictionBtn" class="link-btn teal">+ Add Filter</button>
                 </div>
             </div>
 
-            <!-- Register Modal -->
-            <div id="registerModal" class="modal hidden">
-                <div class="modal-content auth-modal">
-                    <h2>Create Account</h2>
-                    <p class="auth-subtitle">Secure your recipes in the cloud</p>
-                    <div class="auth-form">
-                        <input type="email" id="registerEmail" placeholder="Email" required>
-                        <input type="password" id="registerPassword" placeholder="Password (Min 8 chars, A-z, 0-9)" required>
-                        <button id="submitRegisterBtn" class="gradient-button">Create Account</button>
-                        <p class="auth-switch">Already have an account? <a href="#" id="switchToLogin">Login</a></p>
-                    </div>
-                    <button class="close-modal-x" aria-label="Close">&times;</button>
-                </div>
-            </div>
+            <button id="cookButton" class="main-cook-btn">Cook Magic 😋</button>
 
-
-
-            <div class="input-group" id="ingredientsContainer">
-                <div class="input-wrapper has-badge">
-                    <input type="text" class="ingredient-input" placeholder="Ingredient (e.g., Chicken)" aria-label="Ingredient">
-                    <button id="cuisineBadge" class="cuisine-badge" aria-label="Select Cuisine">🌍 Any</button>
-                </div>
-            </div>
-            
-            <div class="add-more-container" style="display: flex; justify-content: space-between;">
-                <button id="clearIngredientsBtn" class="text-button" style="color: #ef4444;">Clear All</button>
-                <button id="addIngredientBtn" class="text-button">+ Add Ingredient</button>
-            </div>
-
-            <!-- Dietary Restrictions -->
-            <div class="input-group" id="restrictionsContainer">
-                <div class="input-wrapper">
-                    <input type="text" class="restriction-input" placeholder="Dietary Filter (Optional, e.g., Vegan)" aria-label="Dietary Filter">
-                    <div class="info-icon" aria-label="Dietary restrictions are special food rules or allergies (e.g., Vegan, Gluten-Free, Nut Allergy, Halal, Keto, etc.).">i</div>
-                </div>
-            </div>
-            
-            <div class="add-more-container">
-                <button id="addRestrictionBtn" class="text-button">+ Add Filter</button>
-            </div>
-
-
-            <!-- reCAPTCHA Placeholder (Bot protection for expensive AI calls) -->
-            <!-- Uncomment and add your real reCAPTCHA site key when ready:
-            <div id="recaptcha-container" class="g-recaptcha" data-sitekey="YOUR_RECAPTCHA_SITE_KEY" style="margin-bottom: 1rem; display: flex; justify-content: center;"></div>
-            -->
-
-            <button id="cookButton" class="gradient-button">Cook Magic 😋</button>
-
-
-            <!-- 3D Book Container -->
+            <!-- Book Container (Preserved) -->
             <div id="bookContainer" class="book-container hidden">
                 <div class="book closed" id="recipeBook">
-                    <!-- Left cover (flips open) -->
                     <div class="book-cover front">
                         <h2>📖</h2>
                         <h3>Secret Recipes</h3>
                         <div class="book-spine"></div>
                     </div>
-                    <!-- Left page (static back of the cover) -->
                     <div class="book-page left-page">
                         <div class="left-page-content" id="leftPageContent">
-                            <p>from the culinary gods...</p>
+                            <p>...from the culinary gods...</p>
                         </div>
                     </div>
-                    
-                    <!-- Right page (where content appears) -->
                     <div class="book-page right-page" id="rightPage">
                         <div id="storyLoader" class="story-loader hidden">
                             <div id="storyEmoji" class="story-emoji">🤔</div>
                             <p id="storyText" class="story-text">Thinking of a recipe...</p>
                         </div>
-                        <div id="recipeContent" class="page-content page-slider"></div>
-                        <div class="page-controls" style="position: absolute; bottom: 1rem; left: 0; width: 100%; display: flex; justify-content: space-between; padding: 0 1.5rem; pointer-events: none;">
-                            <div style="pointer-events: auto;">
-                                <button id="prevPageBtn" class="page-btn hidden">◄</button>
+                        <div id="pageWrapper">
+                            <div id="recipeContent" class="page-content"></div>
+                        </div>
+                        <div class="page-controls">
+                            <button id="prevPageBtn" class="page-btn hidden">◄</button>
+                            <div class="action-btns">
+                                <span id="pageIndicator" style="font-size:0.7rem; color:#aaa;"></span>
+                                <button id="shareRecipeBtn" class="page-btn hidden">Share</button>
+                                <button id="saveRecipeBtn" class="page-btn hidden">Save</button>
                             </div>
-                            <div style="display: flex; gap: 0.75rem; justify-content: flex-end; align-items: center; pointer-events: auto;">
-                                <button id="shareRecipeBtn" class="page-btn hidden" aria-label="Share Recipe">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-                                </button>
-                                <button id="saveRecipeBtn" class="page-btn hidden" aria-label="Save Recipe">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>
-                                </button>
-                                <button id="nextPageBtn" class="page-btn hidden">►</button>
-                            </div>
+                            <button id="nextPageBtn" class="page-btn hidden">►</button>
                         </div>
                     </div>
-                    
-                    <!-- Back cover (static behind the right page) -->
                     <div class="book-cover back"></div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Supabase Client Library -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- DOMPurify: sanitize HTML before inserting into DOM (XSS prevention) -->
-    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
-    <!-- For parsing markdown from Gemini response -->
-    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
-    <script src="script.js?v=16"></script>
+    <!-- Modals (Preserved) -->
+    <div id="cuisineModal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Select Cuisine Style</h2>
+            <div class="cuisine-grid">
+                <!-- Tags added dynamically or kept from previous -->
+                <button class="cuisine-tag active" data-cuisine="Any">🌍 Any</button>
+                <button class="cuisine-tag" data-cuisine="Italian">🍝 Italian</button>
+                <button class="cuisine-tag" data-cuisine="Indian">🍛 Indian</button>
+                <button class="cuisine-tag" data-cuisine="Mexican">🌮 Mexican</button>
+                <button class="cuisine-tag" data-cuisine="Chinese">🥡 Chinese</button>
+            </div>
+            <button id="closeModalBtn" class="close-modal">Done</button>
+        </div>
+    </div>
+
+    <div id="savedModal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Your Saved Magic</h2>
+            <div id="savedRecipesList" class="saved-list"></div>
+            <button id="closeSavedModalBtn" class="close-modal">Close</button>
+        </div>
+    </div>
+
+    <!-- Manual Add Modal -->
+    <div id="manualAddModal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Add Your Recipe</h2>
+            <div class="input-group">
+                <input type="text" id="manualTitle" placeholder="Recipe Title (e.g., Mom's Pasta)">
+                <textarea id="manualContent" placeholder="Recipe details, ingredients, steps..." style="width: 100%; height: 200px; padding: 1rem; background: var(--bg-color); color: white; border: 1px solid var(--border); border-radius: 12px; margin-top: 1rem; outline: none;"></textarea>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button id="closeManualBtn" class="close-modal" style="flex: 1; background: var(--border);">Cancel</button>
+                <button id="saveManualBtn" class="main-cook-btn" style="flex: 1; margin: 0;">Save Recipe</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Key Settings Modal -->
+    <div id="apiKeyModal" class="modal hidden">
+        <div class="modal-content">
+            <h2>🔑 API Configuration</h2>
+            <p style="color: var(--text-light); margin: 1rem 0; font-size: 0.9rem;">Enter your <strong>Groq API Key</strong> to power recipe generation. It's <strong>free</strong> and stored only in your browser.</p>
+            <div class="input-group">
+                <input type="password" id="apiKeyInput" placeholder="Enter your Groq API Key (gsk_...)">
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button id="closeApiKeyBtn" class="close-modal" style="flex: 1; background: var(--border);">Cancel</button>
+                <button id="saveApiKeyBtn" class="main-cook-btn" style="flex: 1; margin: 0;">Save Key</button>
+            </div>
+            <p style="text-align: center; margin-top: 1rem; font-size: 0.8rem;"><a href="https://console.groq.com/keys" target="_blank" style="color: var(--teal); text-decoration: none;">Get a free Groq key here ↗</a></p>
+        </div>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
 </body>
 </html>
