@@ -9,6 +9,14 @@ const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
 export const GeminiAI = {
+    /**
+     * Attempts to generate a recipe using the Groq API first. If it fails or is unconfigured,
+     * falls back to the Gemini API if a legacy key is provided.
+     * @param {string} prompt - The assembled prompt string containing ingredients and filters.
+     * @param {string} apiKey - The legacy Gemini API key (fallback only).
+     * @returns {Promise<string>} The generated recipe text in Markdown format.
+     * @throws {Error} If both APIs fail or no API key is configured.
+     */
     async generateRecipe(prompt, apiKey) {
         // --- Try Groq first (free, no user quota) ---
         const groqKey = localStorage.getItem('bs_v2_groq_key');
@@ -28,6 +36,13 @@ export const GeminiAI = {
         throw new Error('No API key configured. Please set up a key via the Profile button.');
     },
 
+    /**
+     * Makes a direct API call to Groq's Llama-3.3-70b-versatile model.
+     * @param {string} prompt - The user's cooking prompt.
+     * @param {string} groqKey - The user's Groq API key from localStorage.
+     * @returns {Promise<string>} The generated recipe content.
+     * @private
+     */
     async _callGroq(prompt, groqKey) {
         const res = await fetch(GROQ_ENDPOINT, {
             method: 'POST',
@@ -57,6 +72,15 @@ export const GeminiAI = {
         return text;
     },
 
+    /**
+     * Makes a fallback API call to Google's Gemini models.
+     * Iterates through a list of candidate models until one succeeds.
+     * @param {string} prompt - The user's cooking prompt.
+     * @param {string} apiKey - The user's Gemini API key from localStorage.
+     * @returns {Promise<string>} The generated recipe content.
+     * @throws {Error} Quota errors, invalid key errors, or general generation failures.
+     * @private
+     */
     async _callGemini(prompt, apiKey) {
         const candidates = [
             { model: 'gemini-1.5-flash-latest', version: 'v1beta' },

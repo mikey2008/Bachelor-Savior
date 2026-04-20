@@ -4,9 +4,13 @@ import { GeminiAI } from './gemini.js';
 const GROQ_KEY = 'bs_v2_groq_key';
 
 // --- State ---
+/** @type {string} Currently selected cuisine filter */
 let selectedCuisine = 'Any';
+/** @type {string} The full markdown text of the currently displayed recipe */
 let currentRecipe = '';
+/** @type {number} Zero-indexed current page number in the recipe book */
 let currentPage = 0;
+/** @type {number} Total number of pages for the current recipe */
 let totalPages = 1;
 
 // --- DOM Elements ---
@@ -31,6 +35,9 @@ document.addEventListener('DOMContentLoaded', () => {
     applyTheme();
 });
 
+/**
+ * Binds all static event listeners to DOM elements upon initialization.
+ */
 function setupEventListeners() {
     // Theme
     themeToggle.addEventListener('click', toggleTheme);
@@ -107,24 +114,40 @@ function setupEventListeners() {
 
 // --- Logic ---
 
+/**
+ * Toggles the visibility of a modal element.
+ * @param {string} id - The DOM ID of the modal element.
+ * @param {boolean} hide - If true, adds the 'hidden' class; otherwise removes it.
+ */
 function toggleModal(id, hide) {
     const el = document.getElementById(id);
     if (hide) el.classList.add('hidden');
     else el.classList.remove('hidden');
 }
 
+/**
+ * Toggles the light/dark mode theme and saves the preference to localStorage.
+ */
 function toggleTheme() {
     document.body.classList.toggle('light-mode');
     const isLight = document.body.classList.contains('light-mode');
     localStorage.setItem('theme', isLight ? 'light' : 'dark');
 }
 
+/**
+ * Applies the saved theme preference from localStorage on page load.
+ */
 function applyTheme() {
     if (localStorage.getItem('theme') === 'light') {
         document.body.classList.add('light-mode');
     }
 }
 
+/**
+ * Main handler for generating a recipe. Reads user inputs, initiates the AI
+ * generation process, updates UI states, and handles errors or quotas.
+ * @async
+ */
 async function handleCooking() {
     if (cookBtn.disabled) return;
     
@@ -202,10 +225,21 @@ async function handleCooking() {
     }
 }
 
+/**
+ * Extracts and trims values from all input elements matching a selector.
+ * @param {string} selector - The CSS selector for the input elements.
+ * @returns {string[]} An array of non-empty input values.
+ */
 function getInputs(selector) {
     return Array.from(document.querySelectorAll(selector)).map(i => i.value.trim()).filter(v => v);
 }
 
+/**
+ * Dynamically adds a new input row for ingredients or restrictions.
+ * @param {HTMLElement} container - The container to append the new row to.
+ * @param {string} placeholder - The placeholder text for the input.
+ * @param {string} className - The CSS class for the input element.
+ */
 function addDynamicRow(container, placeholder, className) {
     const div = document.createElement('div');
     div.className = 'input-wrapper has-remove';
@@ -219,8 +253,12 @@ function addDynamicRow(container, placeholder, className) {
 }
 
 // --- Story Loader ---
+/** @type {number|null} Interval ID for the story loading animation */
 let _storyInterval = null;
 
+/**
+ * Starts the cycling emoji and text animation while generating a recipe.
+ */
 function startStoryLoader() {
     stopStoryLoader();
     const loader = document.getElementById('storyLoader');
@@ -238,6 +276,9 @@ function startStoryLoader() {
     }, 1200);
 }
 
+/**
+ * Stops and hides the cycling emoji animation.
+ */
 function stopStoryLoader() {
     clearInterval(_storyInterval);
     const loader = document.getElementById('storyLoader');
@@ -245,8 +286,13 @@ function stopStoryLoader() {
 }
 
 // --- Global pages store ---
+/** @type {string[]} Array of HTML strings representing the pages of the recipe */
 let recipePages = [];
 
+/**
+ * Parses markdown text, prepares the pagination, and renders the first page.
+ * @param {string} text - The raw Markdown text of the recipe.
+ */
 function renderRecipe(text) {
     currentPage = 0;
     recipePages = buildRecipePages(text);
@@ -270,6 +316,9 @@ function renderRecipe(text) {
     updatePaginationUI();
 }
 
+/**
+ * Attaches event listeners to checklist items so they stroke-through on click.
+ */
 function wireCheckboxes() {
     recipeContent.querySelectorAll('.check-item').forEach(item => {
         const cb = item.querySelector('input[type="checkbox"]');
@@ -282,6 +331,11 @@ function wireCheckboxes() {
     });
 }
 
+/**
+ * Parses the Markdown recipe and splits it into logical HTML pages (chunks).
+ * @param {string} text - The raw Markdown text of the recipe.
+ * @returns {string[]} Array of safe HTML strings, one for each page.
+ */
 function buildRecipePages(text) {
     if (!window.marked) return [`<p style="font-size:0.85rem;">${text}</p>`];
     if (!window.DOMPurify) {
@@ -380,6 +434,9 @@ function buildRecipePages(text) {
     return pages;
 }
 
+/**
+ * Updates the visibility of pagination controls and the page number indicator.
+ */
 function updatePaginationUI() {
     totalPages = recipePages.length || 1;
 
@@ -403,7 +460,13 @@ function updatePaginationUI() {
     }
 }
 
+/** @type {boolean} State flag indicating if a 3D page flip animation is active */
 let _flipping = false;
+
+/**
+ * Animates a 3D page turn to navigate through the recipe book.
+ * @param {number} dir - Direction to turn (-1 for previous, 1 for next).
+ */
 function paginate(dir) {
     if (_flipping) return;
     totalPages = recipePages.length || 1;
@@ -430,12 +493,18 @@ function paginate(dir) {
 }
 
 
+/**
+ * Saves the current recipe to localStorage via the Storage utility.
+ */
 function saveRecipe() {
     if (!currentRecipe) return;
     Storage.saveRecipe(getTitle(currentRecipe), currentRecipe);
     alert('Recipe saved!');
 }
 
+/**
+ * Handles the manual saving of a user-entered recipe from the modal.
+ */
 function handleManualSave() {
     const title = document.getElementById('manualTitle').value.trim();
     const content = document.getElementById('manualContent').value.trim();
@@ -445,20 +514,35 @@ function handleManualSave() {
     toggleModal('manualAddModal', true);
 }
 
+/**
+ * Shares the current recipe using the Web Share API or falls back to clipboard.
+ */
 function shareRecipe() {
     const text = `Bachelor Saviour Recipe:\n\n${currentRecipe}`;
     if (navigator.share) navigator.share({ title: 'New Recipe', text }).catch(() => copyToClip(text));
     else copyToClip(text);
 }
 
+/**
+ * Copies text to the user's clipboard.
+ * @param {string} text - The text to copy.
+ */
 function copyToClip(text) {
     navigator.clipboard.writeText(text).then(() => alert('Copied!'));
 }
 
+/**
+ * Extracts a recipe title from the first header line of a markdown string.
+ * @param {string} text - The raw Markdown text.
+ * @returns {string} The formatted recipe title.
+ */
 function getTitle(text) {
     return text.split('\n')[0].replace(/[#*]/g, '').trim() || 'Magical Recipe';
 }
 
+/**
+ * Renders the list of saved recipes in the Saved Recipes modal.
+ */
 function renderSavedList() {
     const list = document.getElementById('savedRecipesList');
     const recipes = Storage.getSavedRecipes();
