@@ -299,9 +299,23 @@ input:focus {
 .page-content {
     width: 100%;
     height: 100%;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 4px;
+    padding-bottom: 0.5rem;
     transform-origin: left center;
     backface-visibility: hidden;
+}
+
+.page-content::-webkit-scrollbar {
+    width: 4px;
+}
+.page-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+.page-content::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
 }
 
 .page-section-title {

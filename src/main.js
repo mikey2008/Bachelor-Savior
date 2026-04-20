@@ -422,7 +422,7 @@ function buildRecipePages(text) {
     }
 
     // Chunk steps across pages (long items → fewer per page)
-    const STEPS_PER_PAGE = 4;
+    const STEPS_PER_PAGE = 3;
     const stepsTotal = Math.ceil(stepItems.length / STEPS_PER_PAGE);
     for (let i = 0; i < stepItems.length; i += STEPS_PER_PAGE) {
         const chunk = stepItems.slice(i, i + STEPS_PER_PAGE);
