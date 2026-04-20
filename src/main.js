@@ -126,6 +126,8 @@ function applyTheme() {
 }
 
 async function handleCooking() {
+    if (cookBtn.disabled) return;
+    
     const ingredients = getInputs('.ingredient-input');
     if (ingredients.length === 0) return alert('Add some ingredients first!');
 
@@ -147,10 +149,9 @@ async function handleCooking() {
     recipeBook.classList.add('closed');
     startStoryLoader();
     
-    setTimeout(() => {
-        recipeBook.classList.remove('closed');
-        recipeBook.classList.add('open');
-    }, 100);
+    await new Promise(resolve => setTimeout(resolve, 150));
+    recipeBook.classList.remove('closed');
+    recipeBook.classList.add('open');
 
     const prompt = `Act as a master chef. Create a creative recipe using: ${ingredients.join(', ')}. Cuisine: ${selectedCuisine}. Filters: ${filters}. Markdown format with emojis.`;
 
@@ -221,6 +222,7 @@ function addDynamicRow(container, placeholder, className) {
 let _storyInterval = null;
 
 function startStoryLoader() {
+    stopStoryLoader();
     const loader = document.getElementById('storyLoader');
     if (!loader) return;
     loader.classList.remove('hidden');
@@ -282,9 +284,13 @@ function wireCheckboxes() {
 
 function buildRecipePages(text) {
     if (!window.marked) return [`<p style="font-size:0.85rem;">${text}</p>`];
+    if (!window.DOMPurify) {
+        console.error('Security Alert: DOMPurify not loaded. Aborting render to prevent XSS.');
+        return [`<p style="color:red; font-size:0.85rem;">Security error: Please reload the page.</p>`];
+    }
 
     const raw = window.marked.parse(text);
-    const safe = window.DOMPurify ? window.DOMPurify.sanitize(raw) : raw;
+    const safe = window.DOMPurify.sanitize(raw);
 
     const wrapper = document.createElement('div');
     wrapper.innerHTML = safe;
