@@ -1,16 +1,15 @@
 /**
- * Bachelor Savior - Frontend Logic
- * Implements secure JWT-based authentication, fetchWithAuth helper,
- * and UI state management (Theme, Modals, Profile Menu, Recipe CRUD).
+ * Bachelor Savior - Frontend Logic v16.0
  */
+console.log("Bachelor Savior v16.0 Initialized");
+window.BS_VERSION = "16.0";
 
 const SUPABASE_URL = 'https://srwwiytlwqcgzcvkzmck.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNyd3dpeXRsd3FjZ3pjdmt6bWNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2ODg3NDMsImV4cCI6MjA5MDI2NDc0M30.Lz8wGt6xKdtfehhvj_dJniV4TPkDOMX6g3q7RZf1eZw'; // Restored working Anon JWT
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-    ? 'http://localhost:3001' 
-    : 'https://bachelor-savior-api.onrender.com';
+const GEMINI_MODEL = 'gemini-1.5-flash';
+const GEMINI_KEY_STORAGE = 'bs_gemini_api_key';
 
 let currentUser = null;
 let currentRecipeText = "";
@@ -29,28 +28,44 @@ function sanitizeError(error) {
     if (msg.includes('403')) return 'Permission denied. Check if the server is allowed to speak to the AI.';
     if (msg.includes('429')) return 'Too many recipe requests. Slow down!';
     
-    // Show exactly what the server said
-    if (msg.length > 0) return `Backend Error: ${msg}`;
+    if (msg.includes('API key')) return 'Gemini API key invalid/expired. Update your key and try again.';
+    if (msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED')) return 'Gemini free-tier quota reached. Try again later.';
+
+    // Show exactly what Gemini said
+    if (msg.length > 0) return `AI Error: ${msg}`;
     
     return 'Something went wrong. Please try again later.';
 }
 
-/**
- * Enhanced fetch wrapper that handles:
- * 1. Automatic inclusion of Access Token (Bearer)
- * 2. Automatic Refresh Token logic on 401
- * 3. Graceful session expiry handling
- */
-/**
- * Fetch wrapper for AI generation (Legacy backend proxy)
- */
-async function fetchWithAuth(url, options = {}) {
-    if (!options.headers) options.headers = {};
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session) {
-        options.headers['Authorization'] = `Bearer ${session.access_token}`;
-    }
-    return fetch(API_BASE + url, options);
+function getGeminiApiKey() {
+    let key = localStorage.getItem(GEMINI_KEY_STORAGE) || '';
+    if (key) return key;
+    key = (window.prompt('Enter your Gemini API key (stored locally in this browser):') || '').trim();
+    if (!key) throw new Error('Gemini API key is required.');
+    localStorage.setItem(GEMINI_KEY_STORAGE, key);
+    return key;
+}
+
+async function requestRecipeFromGemini(prompt, apiKey) {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
+    return fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 1536
+            }
+        })
+    });
+}
+
+function extractRecipeText(data) {
+    if (data?.recipe) return data.recipe;
+    if (data?.candidates?.[0]?.content?.parts?.[0]?.text) return data.candidates[0].content.parts[0].text;
+    if (data?.choices?.[0]?.message?.content) return data.choices[0].message.content;
+    return '';
 }
 
 // --- UI Elements ---
@@ -396,6 +411,7 @@ function renderSavedList() {
 
 function formatAndRenderRecipe(recipeText, container) {
     if(!container) return;
+    currentPage = 0; // Reset page counter when rendering new content
     if (typeof marked === 'undefined') { container.textContent = recipeText; return; }
     
     const rawHtml = marked.parse(recipeText);
@@ -433,25 +449,50 @@ function viewSpecificRecipe(recipe) {
     
     setTimeout(() => {
         currentPage = 0;
+        if(recipeContent) recipeContent.scrollTo({ left: 0 }); // Explicit scroll reset
         updatePagination(recipeContent);
-        if(recipeContent) recipeContent.style.transform = `translateX(0px)`;
     }, 150);
 }
 
 function updatePagination(recipeContent) {
     if(!recipeContent) return;
+    
+    // Give the browser a moment to calculate the column layout
     const scrollWidth = recipeContent.scrollWidth;
-    totalPages = Math.max(1, Math.ceil(scrollWidth / 280));
+    totalPages = Math.max(1, Math.ceil((scrollWidth + 40) / 320));
+    console.log(`[V15] scrollWidth: ${scrollWidth}, totalPages: ${totalPages}, current: ${currentPage}`);
     
     const pb = document.getElementById('prevPageBtn');
     const nb = document.getElementById('nextPageBtn');
     const sb = document.getElementById('saveRecipeBtn');
     const shb = document.getElementById('shareRecipeBtn');
     
-    if(pb) pb.classList.toggle('hidden', currentPage <= 0);
+    if(pb) {
+        pb.classList.toggle('hidden', currentPage <= 0);
+        pb.onclick = (e) => {
+            e.preventDefault();
+            if (currentPage > 0) {
+                currentPage--;
+                console.log(`[V15] Prev -> ${currentPage}`);
+                recipeContent.style.transform = `translateX(-${currentPage * 320}px)`;
+                updatePagination(recipeContent);
+            }
+        };
+    }
     
     if (currentPage < totalPages - 1) {
-        if(nb) nb.classList.remove('hidden');
+        if(nb) {
+            nb.classList.remove('hidden');
+            nb.onclick = (e) => {
+                e.preventDefault();
+                if (currentPage < totalPages - 1) {
+                    currentPage++;
+                    console.log(`[V15] Next -> ${currentPage}`);
+                    recipeContent.style.transform = `translateX(-${currentPage * 320}px)`;
+                    updatePagination(recipeContent);
+                }
+            };
+        }
         if(shb) shb.classList.add('hidden');
         if(sb) sb.classList.add('hidden');
     } else {
@@ -538,45 +579,35 @@ if(cookBtn) cookBtn.onclick = async () => {
     setTimeout(() => { if(recipeBook) { recipeBook.classList.remove('closed'); recipeBook.classList.add('open'); } }, 100);
 
     try {
-        // Switching to raw fetch to bypass SDK masking and see the real error body
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-recipe`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-            },
-            body: JSON.stringify({ prompt })
-        });
-        
+        const apiKey = getGeminiApiKey();
+        const response = await requestRecipeFromGemini(prompt, apiKey);
         const data = await response.json();
-        
-        if (!response.ok) {
-            // This will show "GEMINI_API_KEY missing" or other specific Gemini errors
-            throw new Error(data.error || data.message || `Error ${response.status}: ${response.statusText}`);
+        if (!response.ok) throw new Error(data?.error?.message || data?.error || data?.message || `Error ${response.status}`);
+
+        const text = extractRecipeText(data);
+        if (!text) {
+            throw new Error("AI returned empty results.");
         }
         
-        if (!data || !data.candidates || !data.candidates[0]) {
-            throw new Error("AI returned empty results. Try a different prompt.");
-        }
-        
-        const text = data.candidates[0].content.parts[0].text;
         currentRecipeText = text;
         activeViewRecipe = text;
         
         stopStoryLoader();
         formatAndRenderRecipe(text, recipeContent);
-        setTimeout(() => updatePagination(recipeContent), 150);
+        // Reset transformation and update pagination
+        if(recipeContent) recipeContent.style.transform = 'translateX(0)';
+        setTimeout(() => updatePagination(recipeContent), 200);
     } catch(err) {
         stopStoryLoader();
-        console.error("DEBUG - Raw Response Error:", err);
+        console.error("DEBUG - Recipe Gen Error:", err);
         if(recipeContent) {
-            recipeContent.innerHTML = `<h2>Error</h2><p>${err.message}</p>`;
+            recipeContent.innerHTML = `<div class="p-4 bg-red-50 text-red-700 rounded-lg"><h2>Chef encountered an error</h2><p>${sanitizeError(err)}</p></div>`;
         }
     } finally {
          cookBtn.disabled = false;
          cookBtn.textContent = "Cook Magic 😋";
     }
-};
+}
 
 // Generic close modal clicking outside
 window.onclick = (e) => {

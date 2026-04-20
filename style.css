@@ -309,6 +309,8 @@ input:focus, textarea:focus {
     justify-content: center;
     align-items: center;
     transition: transform 1s;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 }
 
 .book.open .book-cover.front {
@@ -366,6 +368,12 @@ input:focus, textarea:focus {
     opacity: 1;
 }
 
+.left-page-content {
+    transform: rotateY(180deg);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
 .left-page-content p {
     font-size: 1rem;
     color: #666;
@@ -394,10 +402,12 @@ input:focus, textarea:focus {
 
 /* Page Slider */
 .page-slider {
+    display: block;
     column-width: 280px;
     column-gap: 40px;
     height: 380px;
-    width: 280px;
+    width: max-content; /* Critical: allow the slider to expand for all columns */
+    min-width: 280px;
     transition: transform 0.6s cubic-bezier(0.645, 0.045, 0.355, 1);
 }
 
