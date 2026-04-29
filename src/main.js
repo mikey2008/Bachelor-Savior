@@ -68,8 +68,8 @@ function setupEventListeners() {
     document.getElementById('saveManualBtn').onclick = handleManualSave;
 
     // View Saved
-    document.getElementById('viewSavedBtn').onclick = () => {
-        renderSavedList();
+    document.getElementById('viewSavedBtn').onclick = async () => {
+        await renderSavedList();
         toggleModal('savedModal', false);
     };
     document.getElementById('closeSavedModalBtn').onclick = () => toggleModal('savedModal', true);
@@ -496,20 +496,20 @@ function paginate(dir) {
 /**
  * Saves the current recipe to localStorage via the Storage utility.
  */
-function saveRecipe() {
+async function saveRecipe() {
     if (!currentRecipe) return;
-    Storage.saveRecipe(getTitle(currentRecipe), currentRecipe);
+    await Storage.saveRecipe(getTitle(currentRecipe), currentRecipe);
     alert('Recipe saved!');
 }
 
 /**
  * Handles the manual saving of a user-entered recipe from the modal.
  */
-function handleManualSave() {
+async function handleManualSave() {
     const title = document.getElementById('manualTitle').value.trim();
     const content = document.getElementById('manualContent').value.trim();
     if (!title || !content) return alert('Title and Content required.');
-    Storage.saveRecipe(title, content);
+    await Storage.saveRecipe(title, content);
     alert('Recipe added manually!');
     toggleModal('manualAddModal', true);
 }
@@ -543,17 +543,20 @@ function getTitle(text) {
 /**
  * Renders the list of saved recipes in the Saved Recipes modal.
  */
-function renderSavedList() {
+async function renderSavedList() {
     const list = document.getElementById('savedRecipesList');
-    const recipes = Storage.getSavedRecipes();
+    const recipes = await Storage.getSavedRecipes();
     list.innerHTML = recipes.length ? '' : '<p style="text-align: center; color: var(--text-light);">No recipes saved.</p>';
     recipes.forEach(r => {
         const div = document.createElement('div');
         div.style.cssText = 'padding: 1rem; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 0.75rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: var(--bg-color);';
         div.innerHTML = `<span>${r.title}</span><button class="del-btn" style="background:none; border:none; cursor:pointer;">🗑️</button>`;
-        div.onclick = (e) => {
+        div.onclick = async (e) => {
             if (e.target.classList.contains('del-btn')) {
-                if (confirm('Delete?')) { Storage.deleteRecipe(r.id); renderSavedList(); }
+                if (confirm('Delete?')) { 
+                    await Storage.deleteRecipe(r.id); 
+                    await renderSavedList(); 
+                }
             } else {
                 currentRecipe = r.content;
                 renderRecipe(r.content);

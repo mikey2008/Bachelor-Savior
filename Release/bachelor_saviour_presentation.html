@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bachelor Saviour V2 - Presentation</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+    body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; background: #0d1117; color: #e6edf3; overflow: hidden; }
+    .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; opacity: 0; transition: opacity 0.5s ease-in-out; pointer-events: none; padding: 2rem; box-sizing: border-box; }
+    .slide.active { opacity: 1; pointer-events: auto; }
+    h1 { font-size: 4rem; color: #14b8a6; margin-bottom: 0.5rem; text-shadow: 0 0 20px rgba(20,184,166,0.3); }
+    h2 { font-size: 2.5rem; color: #14b8a6; margin-bottom: 2rem; }
+    p { font-size: 1.5rem; line-height: 1.6; max-width: 800px; color: #8b949e; }
+    ul { font-size: 1.5rem; text-align: left; line-height: 1.8; color: #e6edf3; }
+    li { margin-bottom: 1rem; }
+    .controls { position: fixed; bottom: 2rem; right: 2rem; z-index: 100; }
+    button { background: #14b8a6; color: white; border: none; padding: 1rem 2rem; font-size: 1.2rem; border-radius: 8px; cursor: pointer; margin-left: 1rem; font-weight: bold; transition: 0.2s; }
+    button:hover { background: #0d9488; }
+    .counter { position: fixed; bottom: 2rem; left: 2rem; font-size: 1.2rem; color: #8b949e; }
+    .badge { background: #ef4444; color: white; padding: 0.3rem 1rem; border-radius: 20px; font-size: 1rem; vertical-align: middle; margin-left: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="slide active" id="slide-1">
+    <div style="font-size: 6rem; margin-bottom: 1rem;">🧑‍🍳</div>
+    <h1>Bachelor Saviour V2</h1>
+    <p style="color: white; font-weight: 600;">The AI-Powered Magic Cookbook</p>
+    <p>A Local-First Web Application</p>
+</div>
+
+<div class="slide" id="slide-2">
+    <h2>The Problem</h2>
+    <p>Cooking is intimidating for beginners. You open your fridge, see randomly mismatched ingredients, and have no idea what to make. Searching for recipes takes too long, and most recipes require ingredients you don't have.</p>
+</div>
+
+<div class="slide" id="slide-3">
+    <h2>The Solution</h2>
+    <ul style="max-width: 700px;">
+        <li><b>Input what you have:</b> Tell the app your ingredients.</li>
+        <li><b>Set preferences:</b> Specify cuisines or dietary filters.</li>
+        <li><b>AI Magic:</b> An advanced LLM instantly constructs a step-by-step recipe.</li>
+        <li><b>Beautiful UX:</b> Read the generated recipe in a stunning, interactive 3D book interface.</li>
+    </ul>
+</div>
+
+<div class="slide" id="slide-4">
+    <h2>Technical Architecture <span class="badge">V2 Upgrade</span></h2>
+    <ul style="max-width: 800px;">
+        <li>Migrated from traditional Backend servers to <b>100% Client-Side.</b></li>
+        <li><b>Vite & Vanilla JS:</b> Lightning fast load times.</li>
+        <li><b>Groq API:</b> Integrated directly in the browser via native `fetch`. LLaMA-based generation taking milliseconds.</li>
+        <li><b>Bring-Your-Own-Key (BYOK):</b> API keys are stored in `localStorage`, meaning zero hosting costs for the developer.</li>
+    </ul>
+</div>
+
+<div class="slide" id="slide-5">
+    <h2>Security & Performance</h2>
+    <ul style="max-width: 800px;">
+        <li><b>Cross-Site Scripting (XSS) Prevention:</b> AI Markdown is rigorously scrubbed by <code>DOMPurify</code> before being injected into the DOM.</li>
+        <li><b>Smart Pagination:</b> Complex logic dynamically chunks the recipe into 3-step pages, allowing for a perfectly sized 3D reading experience without layout breakage.</li>
+        <li><b>Edge-Ready:</b> Can be deployed on Vercel, Netlify, or GitHub Pages instantly for free.</li>
+    </ul>
+</div>
+
+<div class="slide" id="slide-6">
+    <div style="font-size: 6rem; margin-bottom: 1rem;">🚀</div>
+    <h1>Thank You!</h1>
+    <p>Ready to see the demo?</p>
+</div>
+
+<div class="counter" id="counter">1 / 6</div>
+<div class="controls">
+    <button onclick="changeSlide(-1)">◀ Prev</button>
+    <button onclick="changeSlide(1)">Next ▶</button>
+</div>
+
+<script>
+    let currentSlide = 1;
+    const totalSlides = 6;
+    
+    function changeSlide(dir) {
+        document.getElementById(`slide-${currentSlide}`).classList.remove('active');
+        currentSlide += dir;
+        if (currentSlide < 1) currentSlide = 1;
+        if (currentSlide > totalSlides) currentSlide = totalSlides;
+        document.getElementById(`slide-${currentSlide}`).classList.add('active');
+        document.getElementById('counter').innerText = `${currentSlide} / ${totalSlides}`;
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ') changeSlide(1);
+        if (e.key === 'ArrowLeft') changeSlide(-1);
+    });
+</script>
+</body>
+</html>

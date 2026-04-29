@@ -1,0 +1,31 @@
+================================================
+          BACHELOR SAVIOUR V2 - WORKING EXPLANATION
+================================================
+
+1. CORE CONCEPT
+Bachelor Saviour is a local-first, AI-powered web application designed to help people (especially those with minimal cooking experience) generate meals using exactly what they have in their fridge.
+
+2. ARCHITECTURE (V2)
+The application has transitioned from a traditional client-server model to a 100% Client-Side Architecture.
+- Frontend Framework: Vanilla JavaScript + HTML5 + CSS3 (Bundled via Vite).
+- AI Engine: Groq API (Running LLaMA-3.3-70B) for lightning-fast, free generations.
+- Storage: Browser 'localStorage' is used to persist the user's API Key, Theme Preferences, and Saved Recipes.
+
+3. HOW IT WORKS (STEP-BY-STEP)
+Step A: Provide Ingredients
+The user inputs the ingredients they currently have using the dynamic list. They can also specify dietary restrictions (e.g., "Vegan", "No peanuts") and a target Cuisine (e.g., Italian, Mexican).
+
+Step B: Bring Your Own Key (BYOK)
+The user clicks the 'Profile' button to enter their Groq API key. This key is saved locally in the browser. The application never sends this key to a central backend, ensuring maximum privacy and zero Server costs for the developer.
+
+Step C: AI Generation
+When "Cook Magic" is pressed, the application constructs a hidden System Prompt combined with the user's ingredients. It makes a direct HTTP POST request to Groq's API.
+
+Step D: Markdown Parsing & Security
+The AI responds with a beautifully formatted Markdown recipe. The application uses 'marked.js' to convert the Markdown into HTML. To prevent Cross-Site Scripting (XSS), the HTML is scrubbed clean by 'DOMPurify' before being rendered to the screen.
+
+Step E: 3D Recipe Book UI
+The application calculates the length of the text. It chunks Ingredients (7 items per page) and Steps (3 items per page). It dynamically injects these into an array of "pages". The user clicks the Next/Prev buttons to trigger hardware-accelerated CSS 3D transforms (`rotateY`), creating a realistic book page-flip animation.
+
+Step F: Interactivity & Storage
+Users can click the checkbox next to each step while cooking to strike it through. At the end of the book, they can save the recipe to localStorage or share it via the native Web Share API.

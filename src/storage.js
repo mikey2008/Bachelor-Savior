@@ -1,6 +1,9 @@
 /**
- * storage.js - LocalStorage management for Bachelor Saviour V2
+ * storage.js - Storage management for Bachelor Saviour V2
+ * Supports both LocalStorage (fallback) and Supabase Backend (primary).
  */
+
+const BACKEND_URL = 'http://localhost:3000/api'; // Change this for production
 
 const KEYS = {
     GEMINI_API_KEY: 'bs_v2_gemini_api_key',
@@ -8,63 +11,87 @@ const KEYS = {
 };
 
 export const Storage = {
-    /**
-     * Retrieves the legacy Gemini API key from localStorage.
-     * @returns {string} The stored API key or an empty string if not found.
-     */
+    // --- API Key Management (Local Only) ---
     getGeminiKey() {
         return localStorage.getItem(KEYS.GEMINI_API_KEY) || '';
     },
-
-    /**
-     * Saves the legacy Gemini API key to localStorage.
-     * @param {string} key - The API key to store.
-     */
     setGeminiKey(key) {
         localStorage.setItem(KEYS.GEMINI_API_KEY, key);
     },
-
-    /**
-     * Removes the legacy Gemini API key from localStorage.
-     */
     clearGeminiKey() {
         localStorage.removeItem(KEYS.GEMINI_API_KEY);
     },
 
+    // --- Recipe Management (Hybrid: Backend + Local Fallback) ---
+
     /**
-     * Retrieves all user-saved recipes from localStorage.
-     * @returns {Array<Object>} An array of saved recipe objects.
+     * Retrieves all user-saved recipes.
+     * Tries the backend first, falls back to localStorage if offline or failed.
+     * @returns {Promise<Array<Object>>}
      */
-    getSavedRecipes() {
+    async getSavedRecipes() {
+        try {
+            const res = await fetch(`${BACKEND_URL}/recipes`);
+            if (res.ok) {
+                const remoteRecipes = await res.json();
+                // Sync to local for offline use
+                localStorage.setItem(KEYS.SAVED_RECIPES, JSON.stringify(remoteRecipes));
+                return remoteRecipes;
+            }
+        } catch (e) {
+            console.warn('Backend unavailable, using localStorage fallback.');
+        }
+
         const raw = localStorage.getItem(KEYS.SAVED_RECIPES);
         return raw ? JSON.parse(raw) : [];
     },
 
     /**
-     * Saves a new recipe to localStorage.
-     * @param {string} title - The title of the recipe.
-     * @param {string} content - The full Markdown content of the recipe.
-     * @returns {Object} The newly created recipe object with ID and timestamp.
+     * Saves a new recipe to the backend and localStorage.
+     * @param {string} title
+     * @param {string} content
+     * @returns {Promise<Object>}
      */
-    saveRecipe(title, content) {
-        const recipes = this.getSavedRecipes();
-        const newRecipe = {
+    async saveRecipe(title, content) {
+        const localData = {
             id: Date.now(),
             title,
             content,
             date: new Date().toISOString()
         };
-        recipes.unshift(newRecipe);
+
+        try {
+            const res = await fetch(`${BACKEND_URL}/recipes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, content })
+            });
+            if (res.ok) return await res.json();
+        } catch (e) {
+            console.warn('Failed to save to backend. Saving locally only.');
+        }
+
+        // Local fallback
+        const recipes = JSON.parse(localStorage.getItem(KEYS.SAVED_RECIPES) || '[]');
+        recipes.unshift(localData);
         localStorage.setItem(KEYS.SAVED_RECIPES, JSON.stringify(recipes));
-        return newRecipe;
+        return localData;
     },
 
     /**
-     * Deletes a specific recipe from localStorage by its ID.
-     * @param {number} id - The unique timestamp ID of the recipe to delete.
+     * Deletes a specific recipe.
+     * @param {number|string} id
      */
-    deleteRecipe(id) {
-        const recipes = this.getSavedRecipes().filter(r => r.id !== id);
-        localStorage.setItem(KEYS.SAVED_RECIPES, JSON.stringify(recipes));
+    async deleteRecipe(id) {
+        try {
+            await fetch(`${BACKEND_URL}/recipes/${id}`, { method: 'DELETE' });
+        } catch (e) {
+            console.warn('Failed to delete from backend.');
+        }
+
+        // Local fallback cleanup
+        const recipes = JSON.parse(localStorage.getItem(KEYS.SAVED_RECIPES) || '[]');
+        const filtered = recipes.filter(r => r.id != id);
+        localStorage.setItem(KEYS.SAVED_RECIPES, JSON.stringify(filtered));
     }
 };
