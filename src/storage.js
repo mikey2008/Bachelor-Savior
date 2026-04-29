@@ -3,7 +3,7 @@
  * Supports both LocalStorage (fallback) and Supabase Backend (primary).
  */
 
-const BACKEND_URL = 'http://localhost:3000/api'; // Change this for production
+const BACKEND_URL = '/api'; // Relative path works for both local dev proxy and production
 
 const KEYS = {
     GEMINI_API_KEY: 'bs_v2_gemini_api_key',
